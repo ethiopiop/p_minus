@@ -1,0 +1,131 @@
+if(self.dir) then --can assume positive x velocity, need to cover 'C' 'E' and 'H' 
+       
+        if(self.environment[X+1][Y] ~= 0) then -- covering just 'E' (will think about potential edge cases and corner correction later)
+            --self.environment[X+1][Y]:isCollidingX('E', self.position.dx, self.position.dy)
+            if((self.position.dx >= (X*10)-self.size/2) or ((self.position.dx + self.velocity.dx) > (X*10)-self.size/2))then -- left wall collision
+                self.velocity.dx = 0
+                self.position.dx = ((X)*10)-self.size/2
+               --print("Xcollide E")
+               self.walled = 2
+            end
+        
+        -- some nice corner correction
+        elseif((self.environment[X+1][Y+1] ~= 0) and (self.position.dy > ((Y)*10)-self.size/2 + 1 )) then -- covering just 'H' +1 from rounding? i guess?
+            
+            if (self.position.dy < ((Y * 10)-self.size/2 + 2)) and 
+            (((self.position.dx > (X*10)-self.size/2) or ((self.position.dx + self.velocity.dx) > ((X*10)-self.size/2)))) then
+                self.position.dy =  ((Y)*10)-self.size/2 +1
+                self.velocity.dx += 0.1 --extra bit of speed to not get stuc
+                --print("cornercorrect H")
+            elseif(((self.position.dx > (X*10)-self.size/2) or ((self.position.dx + self.velocity.dx) > ((X*10)-self.size/2))))then -- left wall collision
+                --self.velocity.dx = self.velocity.dx - self.velocity.dx 
+                self.position.dx = ((X)*10)-self.size/2 
+                --print("Xcollide H")
+                self.walled = 2
+            end
+        
+        elseif((self.environment[X+1][Y-1] ~= 0) and (self.position.dy < (((Y-1)*10)+self.size/2-1))) then -- covering just 'C'
+            if(((self.position.dx > (X*10)-self.size/2) or ((self.position.dx + self.velocity.dx) > (X*10)-self.size/2)))then -- left wall collision
+                self.velocity.dx = 0
+                self.position.dx = ((X)*10)-self.size/2
+                --print("Xcollide C", Y*10, self.position.dy, self.position.dx)
+                self.walled = 2
+            end
+        else
+            self.walled = 0
+        end
+    else              --can assume negative x velocity, need to cover 'A' 'D' and 'F' 
+        if(self.environment[X-1][Y] ~= 0) then                -- covering just 'D' 
+            if((self.position.dx <= ((X-1)*10)+self.size/2) or ((self.position.dx + self.velocity.dx) < ((X-1)*10)-self.size/2))then -- right wall collision
+                self.velocity.dx = 0
+                self.position.dx = ((X-1)*10)+(self.size/2)
+                --print("Xcollide D")
+                self.walled = 1
+            end
+        
+        elseif((self.environment[X-1][Y+1] ~= 0) and (self.position.dy > ((Y)*10)-self.size/2 + 1)) then -- covering just 'F'
+            
+            if (self.position.dy < ((Y * 10)-self.size/2 + 2)) and 
+            (((self.position.dx < ((X-1)*10)+self.size/2) or ((self.position.dx + self.velocity.dx) < ((X-1)*10)-self.size/2))) then
+                self.position.dy =  ((Y)*10)-self.size/2 + 1
+                self.velocity.dx -= 0.1
+                --print("cornercorrect F")
+            elseif(((self.position.dx < ((X-1)*10)+self.size/2) or ((self.position.dx + self.velocity.dx) < ((X-1)*10)-self.size/2)))then -- right wall collision
+                --self.velocity.dx = self.velocity.dx - self.velocity.dx
+                self.position.dx = ((X-1)*10)+self.size/2
+                --print("Xcollide F")
+                self.walled = 1
+            end
+        
+        elseif((self.environment[X-1][Y-1] ~= 0) and (self.position.dy < ((Y-1)*10)+self.size/2-1)) then -- covering just 'A'
+            if((self.position.dx < ((X-1)*10)+self.size/2) or ((self.position.dx + self.velocity.dx) < ((X-1)*10)-self.size/2))then -- right wall collision
+                self.velocity.dx = 0
+                self.position.dx = ((X-1)*10)+self.size/2
+                --print("Xcollide A")
+                self.walled = 1
+            end
+        else
+            self.walled = 0
+        end       
+    end
+
+-- vertical collisions : always check for floor, since you might not be moving but still have to collide with the floor
+
+    if (self.velocity.dy < 0)then
+        if(self.environment[X][Y-1] ~=0) then -- covering just 'B'
+            if(self.position.dy < ((Y)*10)-self.size/2)then -- ceiling collision
+                self.velocity.dy = self.velocity.dy - self.velocity.dy
+                self.position.dy = (((Y)*10)-self.size/2)
+                --print("Ycollide B")
+            end
+        elseif (self.environment[X-1][Y-1] ~= 0 and (self.position.dx < ((X-1)*10)+self.size/2)) then -- covering 'A' 
+            if((self.position.dy < ((Y)*10)-self.size/2) and (self.position.dx > ((X-1)*10 + ((self.size/2)-3))))then
+                self.position.dx = ((X-1)*10)+self.size/2
+                --print("corner Correct A")
+            elseif(self.position.dy < ((Y)*10)-self.size/2)then -- ceiling collision
+                self.velocity.dy = self.velocity.dy - self.velocity.dy
+                self.position.dy = ((Y)*10)-self.size/2
+                --print("Ycollide A")
+            end
+        elseif (self.environment[X+1][Y-1] ~= 0 and (self.position.dx > (X*10)-self.size/2)) then -- covering 'C'
+            if(self.position.dy < ((Y)*10)-self.size/2 and (self.position.dx < (X*10 - ((self.size/2)-3))))then 
+                self.position.dx = ((X)*10)-self.size/2  -- cornercorrect
+                --print("Corner Correct C")
+            elseif(self.position.dy < ((Y)*10)-self.size/2) then -- ceiling collision
+                self.velocity.dy = self.velocity.dy - self.velocity.dy
+                self.position.dy = ((Y)*10)-self.size/2
+                --print("Ycollide C")
+            end
+        end
+    end
+
+    if(self.velocity.dy >= 0) then
+        if(self.environment[X][Y+1] ~= 0) then -- covering just 'G'
+            if((self.position.dy > ((Y)*10)-self.size/2) or self.position.dy + self.velocity.dy > ((Y)*10)-self.size/2)then -- floor collision
+                self.velocity.dy = self.velocity.dy - self.velocity.dy
+                self.position.dy = ((Y)*10)-self.size/2
+                self.grounded = true
+                self.dashCount = self.dashTotal
+                --print("Ycollide G")
+            end
+        elseif((self.environment[X-1][Y+1] ~= 0) and (self.position.dx < ((X-1)*10)+self.size/2)) then --covering just 'F'
+            if(self.position.dy > ((Y)*10)-self.size/2)then -- floor collision
+                self.velocity.dy = self.velocity.dy - self.velocity.dy
+                self.position.dy = ((Y)*10)-self.size/2
+                self.grounded = true
+                self.dashCount = self.dashTotal
+                --print("Ycollide F")
+            end
+        elseif((self.environment[X+1][Y+1] ~= 0) and (self.position.dx > (X*10)-self.size/2)) then --covering just 'H'
+            if(self.position.dy > ((Y)*10)-self.size/2)then -- floor collision
+                self.velocity.dy = self.velocity.dy - self.velocity.dy
+                self.position.dy = ((Y)*10)-self.size/2
+                self.grounded = true
+                self.dashCount = self.dashTotal
+                --print("Ycollide H")
+            end
+        else
+            self.grounded = false
+        end  --print(self.grounded)
+    end
+end
