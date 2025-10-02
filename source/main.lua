@@ -226,8 +226,8 @@ function pd.update()
     gfx.sprite.update()
     pd.drawFPS(0, 0)
     levelTerrain:draw(0,0)
-    --local gridX = player:getX() 
-    --local gridY = player:getY()
+    local gridX = player:getX() 
+    local gridY = player:getY()
     --print(gridX,gridY)
     --gfx.setColor(gfx.kColorXOR)
     --gfx.drawRect((gridX)*10, (gridY)*10, 10,10) -- H
@@ -237,7 +237,7 @@ function pd.update()
     --gfx.drawRect((gridX-1)*10, (gridY)*10, 10,10) -- G
     --gfx.drawRect((gridX-2)*10, (gridY)*10, 10,10) -- F
     --gfx.drawRect((gridX-2)*10, (gridY-2)*10, 10,10) -- A
-    --gfx.drawRect((gridX-2)*10, (gridY-1)*10, 10,10) -- D]]
+    --gfx.drawRect((gridX-2)*10, (gridY-1)*10, 10,10) -- D
 
     --if player:getDir() then
     --   gfx.drawRect((gridX-2)*10, (gridY-1)*10, 10,10)

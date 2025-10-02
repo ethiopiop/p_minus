@@ -40,7 +40,7 @@ function Tile:isColliding( tileLocation, playerX, playerY) -- returns boolean co
     ]]
     if tileLocation == 'A' then     
         yDiff = self.y+(3*pSize) - playerY
-        xDiff = self.x+(3*pSize) - playerX + .1 --add a bit to avoid rounding issues (just needed to be more than .07)
+        xDiff = self.x+(3*pSize) - playerX + .15 --add a bit to avoid rounding issues (just needed to be more than .14)
         if (xDiff > 0 and yDiff > 0)then
             return true, xDiff, yDiff, self.tileType
         end
@@ -56,7 +56,7 @@ function Tile:isColliding( tileLocation, playerX, playerY) -- returns boolean co
             return true, xDiff, yDiff, self.tileType
         end
     elseif tileLocation == 'D' then --add yDiff when dealing with offsets
-        xDiff = self.x+(3*pSize) - playerX + .1 --add a bit to avoid rounding issues
+        xDiff = self.x+(3*pSize) - playerX + .15 --add a bit to avoid rounding issues
         if (xDiff >= 0)then 
             return true, xDiff, yDiff, self.tileType
         end

@@ -110,11 +110,11 @@ function Player:checkCollisions()
     end
     local gridX = math.floor(((self.position.dx)/10)+1) -- location in the grid is offset by 1 for buffer zone outside of drawn screen
     local gridY = math.floor(((self.position.dy)/10)+1)
-    --print(self.walled, self.position.dx, self.position.dy)
+    --print(self.dashing, self.position.dx, self.position.dy)
     self:checkCloseCollisions(gridX, gridY, self.position.dx, self.position.dy)
 
     self:checkCloseCollisions(gridX, gridY, self.position.dx+self.velocity.dx, self.position.dy+self.velocity.dy)
-    --print(self.grounded,self.walled)
+    --print(self.dashing)
     
   
     
@@ -145,15 +145,21 @@ function Player:checkCloseCollisions(X, Y, x, y)  --TODO: rework with functions 
             local collide, xDiff, yDiff, tile = self.environment[X+1][Y+1]:isColliding('H', x, y) 
             if (collide)then
                 self:handleCollisionH(X, Y, xDiff, yDiff, tile)
+            else
+                self.walled = 0
+                --print(self.walled, "unwalled from no wall?")
             end
         elseif(self.environment[X+1][Y-1] ~= 0)then
             local collide, xDiff, yDiff, tile = self.environment[X+1][Y-1]:isColliding('C', x, y) 
             if (collide)then
                 self:handleCollisionC(X, Y, xDiff, yDiff, tile)
+            else
+                self.walled = 0
+                --print(self.walled, "unwalled from no wall?")
             end
         else
-            --print("zeroed")
             self.walled = 0
+            --print(self.walled, "unwalled from no wall")
         end
     else              --can assume negative x velocity, need to cover 'A' 'D' and 'F' 
         if(self.environment[X-1][Y] ~= 0)then
@@ -165,15 +171,21 @@ function Player:checkCloseCollisions(X, Y, x, y)  --TODO: rework with functions 
             local collide, xDiff, yDiff, tile = self.environment[X-1][Y+1]:isColliding('F', x, y) 
             if (collide)then
                 self:handleCollisionF(X, Y, xDiff, yDiff, tile)
+            else
+                self.walled = 0
+                --print(self.walled, "unwalled from no wall?")
             end
         elseif(self.environment[X-1][Y-1] ~= 0)then
             local collide, xDiff, yDiff, tile = self.environment[X-1][Y-1]:isColliding('A', x, y)
             if (collide)then
                 self:handleCollisionA(X, Y, xDiff, yDiff, tile)
+            else
+                self.walled = 0
+                --print(self.walled, "unwalled from no wall?")
             end
         else
-            --print("zeroed")
             self.walled = 0
+            --print(self.walled, "unwalled from no wall")
         end
     end
 -- vertical collisions : always check for floor, since you might not be moving but still have to collide with the floor
@@ -321,8 +333,8 @@ function Player:checkInputs()
 
     --print(self.walled, self.grounded)
     if ((pd.buttonJustPressed("a") and self.grounded) or (self.bufferTimer < 3 and self.grounded)) then --all the jumping
-            --print("floorjump")
             self.walled = 0;
+            --print(self.walled, "uncornered by floorjump")
             if self.dashJumpBufferTimer > 0 then self:jumpStart() 
             elseif math.abs(self.dashType) == 1 then self:dashJump() 
             else self:stompJump()  end
@@ -443,7 +455,7 @@ function Player:wallJumpStart(dir)
         self.wallJumpY = 0
     end
 
-   -- print(self.wallJumpY)
+   --print(self.wallJumpY)
 
     if dir == 1 then
         self.velocity.dx += self.jumpX
@@ -457,6 +469,7 @@ function Player:wallJumpStart(dir)
     self.velocity.dy -= self.wallJumpY
     --print("jumped", self.velocity.dy)
     self.walled = 0
+    --print(self.walled, "unwalled by jump")
     self.stompLockout = 0
     self.dir = not self.dir 
    
@@ -470,19 +483,20 @@ end
 
 
 function Player:handleCollisionA(X,Y,xDiff, yDiff, tile)
-    if(xDiff <= yDiff)then -- hitting from the side
+    if(xDiff >= yDiff)then -- hitting from the side
             self.velocity.dx = 0
-            self.position.dx = ((X-1)*10)+self.size/2+.1
-            print("Xcollide A")
+            self.position.dx = ((X-1)*10)+self.size/2+.15
+            --print("Xcollide A")
             self.walled = 1
+            --print(self.walled, "hit top left")
     else -- yDiff < xDiff AKA hitting corner from below
-        if(xDiff <= 3)then
-            self.position.dx = ((X-1)*10)+self.size/2+.1
+        if(xDiff <= 3 and self.environment[X][Y-1]==0)then
+            self.position.dx = ((X-1)*10)+self.size/2+.15
             --print("Corner Correct A")
         else
             self.velocity.dy = self.velocity.dy - self.velocity.dy
-            self.position.dy = ((Y)*10)-self.size/2+.1
-            print("Ycollide A")
+            self.position.dy = ((Y)*10)-self.size/2+.15
+            --print("Ycollide A")
         end
     end
 end
@@ -490,32 +504,34 @@ end
 function Player:handleCollisionB(X,Y,xDiff, yDiff, tile)
     self.velocity.dy = self.velocity.dy - self.velocity.dy
     self.position.dy = (((Y)*10)-self.size/2)
-    print("Ycollide B")
+    --print("Ycollide B")
 end
 
 function Player:handleCollisionC(X,Y,xDiff, yDiff, tile)
-    if(xDiff <= yDiff)then -- hitting from the side
+    if(xDiff >= yDiff - 1)then -- hitting from the side
         self.velocity.dx = 0
         self.position.dx = ((X)*10)-self.size/2
-        print("Xcollide C")
+        --print("Xcollide C")
         self.walled = 2
+        --print(self.walled, "hit top right")
     else -- yDiff < xDiff AKA hitting corner from below
-        if(xDiff <= 3)then
+        if(xDiff <= 3 and self.environment[X][Y-1]==0)then
             self.position.dx = ((X)*10)-self.size/2  -- cornercorrect
-            print("Corner Correct C")
+            --print("Corner Correct C")
         else
             self.velocity.dy = self.velocity.dy - self.velocity.dy
             self.position.dy = ((Y)*10)-self.size/2
-            print("Ycollide C")
+            --print("Ycollide C")
         end
     end
 end
 
 function Player:handleCollisionD(X,Y,xDiff, yDiff, tile)
     self.velocity.dx = 0
-    self.position.dx = ((X-1)*10)+(self.size/2)+.1
+    self.position.dx = ((X-1)*10)+(self.size/2)+.15
     print("Xcollide D")
     self.walled = 1 
+    --print(self.walled, "hit left")
 end
 
 function Player:handleCollisionE(X,Y,xDiff, yDiff, tile)
@@ -523,26 +539,31 @@ function Player:handleCollisionE(X,Y,xDiff, yDiff, tile)
     self.position.dx = ((X)*10)-self.size/2
     print("Xcollide E")
     self.walled = 2
+    --print(self.walled, "hit right")
 end
 
 function Player:handleCollisionF(X,Y,xDiff, yDiff, tile)
-    if(xDiff <= yDiff)then
-        if(yDiff <= 2)then
-            self.position.dy =  ((Y)*10)-self.size/2 + 1 
-            self.velocity.dx -= 0.1
-            print("cornercorrect F")
-        elseif (self.velocity.dy > 0) then
-            self.position.dx = ((X-1)*10)+self.size/2 +.1
-            print("Xcollide F")
-            self.walled = 1
-        end
-    else -- yDiff <= xDiff AKA hitting corner from above
+    
+    if(xDiff >= yDiff)then
         self.velocity.dy = self.velocity.dy - self.velocity.dy
         self.position.dy = ((Y)*10)-self.size/2
         self.grounded = true
         self.dashCount = self.dashTotal
         print("Ycollide F")
+    else -- yDiff <= xDiff AKA hitting corner from above
+        if(yDiff <= 2 and self.dashing == 0)then
+            print(self.position.dy, "cornercorrect F")
+            self.position.dy =  ((Y)*10)-self.size/2 
+            self.velocity.dx -= 0.1
+            self.walled = 1
+        elseif (self.environment[X][Y+1]==0)then
+            self.velocity.dx = 0
+            self.position.dx = ((X-1)*10)+self.size/2 +.15
+            print("Xcollide F")
+            self.walled = 1
+        end
     end
+    
 end
 
 function Player:handleCollisionG(X,Y, xDiff, yDiff, tile)
@@ -551,26 +572,30 @@ function Player:handleCollisionG(X,Y, xDiff, yDiff, tile)
     self.position.dy = ((Y)*10)-self.size/2
     self.grounded = true
     self.dashCount = self.dashTotal
-    print("Ycollide G")
+    print(self.position.dy, "Ycollide G")
 end
 
 function Player:handleCollisionH(X, Y, xDiff, yDiff, tile)
-    if(xDiff <= yDiff)then
-        if(yDiff <= 2)then
-        self.position.dy =  ((Y)*10)-self.size/2 + 1
-        self.velocity.dx += 0.1 --extra bit of speed to not get stuc
-        print("cornercorrect H")
-        elseif (self.velocity.dy >0) then
-        self.position.dx = ((X)*10)-self.size/2 
-        print("Xcollide H")
-        self.walled = 2
-    end
-    else -- yDiff <= xDiff AKA hitting corner from above
+    
+    if(xDiff >= yDiff - 1)then
         self.velocity.dy = self.velocity.dy - self.velocity.dy
         self.position.dy = ((Y)*10)-self.size/2
         self.grounded = true
         self.dashCount = self.dashTotal
         print("Ycollide H")
+    else -- yDiff <= xDiff AKA hitting corner from above
+        if((yDiff <= 2 and self.dashing == 0) or (yDiff <=4 and self.dashing ~=0))then
+            print(self.position.dy, "cornercorrect H")
+            self.position.dy =  ((Y)*10)-self.size/2 
+            print(self.position.dy, "cornercorrect H")
+            self.velocity.dx += 0.1 --extra bit of speed to not get stuc
+            self.walled = 1
+        elseif (self.environment[X][Y+1]==0)then
+            self.velocity.dx = 0
+            self.position.dx = ((X)*10)-self.size/2 
+            print("Xcollide H")
+            self.walled = 2
+        end
     end
 end
 
