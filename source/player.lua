@@ -446,6 +446,7 @@ end
 
 function Player:wallJumpStart(dir)
     
+    --print("walljump")
     if self.walljumpCounter == 0 then
         self.wallJumpY = self.wallJumpYReset
         self.walljumpCounter += 1
@@ -529,7 +530,7 @@ end
 function Player:handleCollisionD(X,Y,xDiff, yDiff, tile)
     self.velocity.dx = 0
     self.position.dx = ((X-1)*10)+(self.size/2)+.15
-    print("Xcollide D")
+    --print("Xcollide D")
     self.walled = 1 
     --print(self.walled, "hit left")
 end
@@ -537,7 +538,7 @@ end
 function Player:handleCollisionE(X,Y,xDiff, yDiff, tile)
     self.velocity.dx = 0
     self.position.dx = ((X)*10)-self.size/2
-    print("Xcollide E")
+    --print("Xcollide E")
     self.walled = 2
     --print(self.walled, "hit right")
 end
@@ -549,17 +550,17 @@ function Player:handleCollisionF(X,Y,xDiff, yDiff, tile)
         self.position.dy = ((Y)*10)-self.size/2
         self.grounded = true
         self.dashCount = self.dashTotal
-        print("Ycollide F")
+        --print("Ycollide F")
     else -- yDiff <= xDiff AKA hitting corner from above
         if(yDiff <= 2 and self.dashing == 0)then
-            print(self.position.dy, "cornercorrect F")
+            --print(self.position.dy, "cornercorrect F")
             self.position.dy =  ((Y)*10)-self.size/2 
             self.velocity.dx -= 0.1
             self.walled = 1
         elseif (self.environment[X][Y+1]==0)then
             self.velocity.dx = 0
             self.position.dx = ((X-1)*10)+self.size/2 +.15
-            print("Xcollide F")
+            --print("Xcollide F")
             self.walled = 1
         end
     end
@@ -572,7 +573,7 @@ function Player:handleCollisionG(X,Y, xDiff, yDiff, tile)
     self.position.dy = ((Y)*10)-self.size/2
     self.grounded = true
     self.dashCount = self.dashTotal
-    print(self.position.dy, "Ycollide G")
+    --print(self.position.dy, "Ycollide G")
 end
 
 function Player:handleCollisionH(X, Y, xDiff, yDiff, tile)
@@ -582,18 +583,18 @@ function Player:handleCollisionH(X, Y, xDiff, yDiff, tile)
         self.position.dy = ((Y)*10)-self.size/2
         self.grounded = true
         self.dashCount = self.dashTotal
-        print("Ycollide H")
+        --print("Ycollide H")
     else -- yDiff <= xDiff AKA hitting corner from above
         if((yDiff <= 2 and self.dashing == 0) or (yDiff <=4 and self.dashing ~=0))then
-            print(self.position.dy, "cornercorrect H")
+            --print(self.position.dy, "cornercorrect H")
             self.position.dy =  ((Y)*10)-self.size/2 
-            print(self.position.dy, "cornercorrect H")
+            --print(self.position.dy, "cornercorrect H")
             self.velocity.dx += 0.1 --extra bit of speed to not get stuc
             self.walled = 1
         elseif (self.environment[X][Y+1]==0)then
             self.velocity.dx = 0
             self.position.dx = ((X)*10)-self.size/2 
-            print("Xcollide H")
+            --print("Xcollide H")
             self.walled = 2
         end
     end
