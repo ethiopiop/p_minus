@@ -113,7 +113,7 @@ function Player:checkCollisions()
     --print(self.dashing, self.position.dx, self.position.dy)
     self:checkCloseCollisions(gridX, gridY, self.position.dx, self.position.dy)
 
-    self:checkCloseCollisions(gridX, gridY, self.position.dx+self.velocity.dx, self.position.dy+self.velocity.dy)
+    self:checkCloseCollisions(gridX, gridY, self.position.dx+ self.velocity.dx, self.position.dy+ self.velocity.dy)
     --print(self.dashing)
     
   
@@ -512,17 +512,17 @@ function Player:handleCollisionC(X,Y,xDiff, yDiff, tile)
     if(xDiff >= yDiff - 1)then -- hitting from the side
         self.velocity.dx = 0
         self.position.dx = ((X)*10)-self.size/2
-        --print("Xcollide C")
+        print("Xcollide C")
         self.walled = 2
         --print(self.walled, "hit top right")
     else -- yDiff < xDiff AKA hitting corner from below
         if(xDiff <= 3 and self.environment[X][Y-1]==0)then
             self.position.dx = ((X)*10)-self.size/2  -- cornercorrect
-            --print("Corner Correct C")
+            print("Corner Correct C")
         else
             self.velocity.dy = self.velocity.dy - self.velocity.dy
             self.position.dy = ((Y)*10)-self.size/2
-            --print("Ycollide C")
+            print("Ycollide C")
         end
     end
 end
@@ -538,24 +538,25 @@ end
 function Player:handleCollisionE(X,Y,xDiff, yDiff, tile)
     self.velocity.dx = 0
     self.position.dx = ((X)*10)-self.size/2
-    --print("Xcollide E")
+    print("Xcollide E")
     self.walled = 2
     --print(self.walled, "hit right")
 end
 
 function Player:handleCollisionF(X,Y,xDiff, yDiff, tile)
     
-    if(xDiff >= yDiff)then
+    if(xDiff >= yDiff and self.environment[X-1][Y] == 0)then
         self.velocity.dy = self.velocity.dy - self.velocity.dy
         self.position.dy = ((Y)*10)-self.size/2
         self.grounded = true
         self.dashCount = self.dashTotal
         --print("Ycollide F")
     else -- yDiff <= xDiff AKA hitting corner from above
-        if(yDiff <= 2 and self.dashing == 0)then
+        if(self.environment[X-1][Y] == 0 and yDiff <= 3 )then
             --print(self.position.dy, "cornercorrect F")
             self.position.dy =  ((Y)*10)-self.size/2 
-            self.velocity.dx -= 0.1
+            if(self.velocity.dy < 0) then self.velocity.dx += 0.1 end
+            self.velocity.dy = 0
             self.walled = 1
         elseif (self.environment[X][Y+1]==0)then
             self.velocity.dx = 0
@@ -578,23 +579,24 @@ end
 
 function Player:handleCollisionH(X, Y, xDiff, yDiff, tile)
     
-    if(xDiff >= yDiff - 1)then
+    if(xDiff >= yDiff - 1 and self.environment[X+1][Y] == 0)then
         self.velocity.dy = self.velocity.dy - self.velocity.dy
         self.position.dy = ((Y)*10)-self.size/2
         self.grounded = true
         self.dashCount = self.dashTotal
-        --print("Ycollide H")
+        print("Ycollide H")
     else -- yDiff <= xDiff AKA hitting corner from above
-        if((yDiff <= 2 and self.dashing == 0) or (yDiff <=4 and self.dashing ~=0))then
-            --print(self.position.dy, "cornercorrect H")
+        if(self.environment[X+1][Y] == 0 and yDiff <= 3 )then
+            print("cornercorrect H")
             self.position.dy =  ((Y)*10)-self.size/2 
-            --print(self.position.dy, "cornercorrect H")
-            self.velocity.dx += 0.1 --extra bit of speed to not get stuc
+            print(self.position.dy, "cornercorrect H")
+            if(self.velocity.dy < 0) then self.velocity.dx += 0.1 end--extra bit of speed to not get stuc
+            self.velocity.dy = 0
             self.walled = 1
         elseif (self.environment[X][Y+1]==0)then
             self.velocity.dx = 0
             self.position.dx = ((X)*10)-self.size/2 
-            --print("Xcollide H")
+            print("Xcollide H")
             self.walled = 2
         end
     end
