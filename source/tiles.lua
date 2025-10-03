@@ -90,7 +90,7 @@ end
 
 
 ---------------- END TILE CODE -----------------
--------------- START EMPTY CODE ----------------
+-------------- START EMPTY CODE ---------------- (NOT USED)
 
 class('Empty').extends(Tile)
 
