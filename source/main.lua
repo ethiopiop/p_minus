@@ -1,260 +1,444 @@
-import "CoreLibs/graphics"
-import "CoreLibs/object"
-import "CoreLibs/sprites"
-import "player"
-import "tiles"
+import("CoreLibs/graphics")
+import("CoreLibs/object")
+import("CoreLibs/sprites")
+import("CoreLibs/ui")
+import("CoreLibs/nineSlice")
+import("CoreLibs/timer")
+import("player")
+import("tiles")
 
--- WHAT I HAVE VS WHAT I WANT
-
---[[
-movement 
-    I like it. dont love it currently but im seeing the vision
-    any major changes at this point are probably a bad idea
-    minor changes should stop once I start making final levels
-        (maybe there could be special levels with wacky/legacy physics or something idk)
-
-levels
-    having only square tiles and nothing else on a pretty small canvas isnt too inspiring
-    half slabs and spikes will help a lot, but hopefully there will be other fun things in the future
-
-    long term goal:
-        several map packs
-        not just 'easy' 'medium' 'hard' but actual themed packs
-            maybe visual themes
-            maybe gameplay style themes
-            maybe unique physics themes
-            maybe a story pack
-            maybe restricted entity pallete
-        and people should be able to use the level editor to make their own maps too!
-            its just a love2d program after all
-        so many cool ideas here
-
-level editor
-    holy jank
-    BUT IT WORKS!!!! YOOOOO
-    plain text is slow to load but its fine since that just happens once per level
-    having to double implement every entity to be visible in game and in the editor will be annoying
-    
-    i dont think ill ever make it pretty, but just functional is good enough 
-    i DO want to figure out how to give that program writing access to the actual folders with the levels in them
-    so i dont have to copy paste all the time
-]]
-
-
----TODO
---[[
-stuff to do in order to do em
-fix collision detection
-    "there shouldnt be math in if statements"
-    make general functions that return true or false if a collision is happening 
-        (then have them be able to take offsets for half slabs)
-    maybe it was a bad idea to ONLY be checking the tiles in front of you
-
-menu
-    be able to choose different levels out of a menu
-    be able to finish a level
-    be able to die/reset (fall/impact damage?)
-        (press up to retry? misinputs could be annoying but there could be an option to turn it off)
-    thats all for menus really
-    
-new entities! (in order of relevance, it looks like a lot, but just put them in one at a time
-                                                 or when you have a bright idea of one that isnt on the list)
-    
-    entities should be numbered in groups of FOUR for level editor functionality
-    mines (offgrid? smaller grid?)
-    extra bouncy tiles
-    one way walls (should be easy to implement with modular hit detection)
-    45 degree slopes??? 
-        (whole mess of stuff i would have to deal with to put those in the game, but would add SO much depth)
-    thwompish guys (should be simple enough, and a good test of moving objects)
-    player followers (I have no idea how computation intensive this is or how to implement it, but i want it)
-    touch switches/doors (will have to think about how to have any amount of switches open any amount of doors)
-    dream blocks? ehh
-    dash refills (never refresh)
-    walljump refills? ehh
-    
-cosmetic
-
-    think of a neat way to display the amount of walljumps you have
-    how the hecc will i be able to draw anything in a level that isnt static
-    how the hecc will i be able to draw/have collision with anything offgrid (actually this shouldnt be too bad?)
-    
-]]
-
-local pd <const> = playdate
-local gfx <const> = pd.graphics
-local vect <const> = pd.geometry.vector2D.new
-
+local pd = playdate
+local gfx = pd.graphics
+local vect = pd.geometry.vector2D.new
 pd.display.setRefreshRate(50)
 local screenHeight = 240
 local screenWidth = 400
 local tileSize = 10
+local firstLoad = true
+STATE = "menu"
+local test = "levels/00-test"
+local easy = "levels/01-easy"
+local medium = "levels/02-medium"
+local hard = "levels/03-hard"
+local custom = "levels/04-custom"
+local levelListTestf = pd.file.listFiles(test)
+local levelListEasyf = pd.file.listFiles(easy)
+local levelListMediumf = pd.file.listFiles(medium)
+local levelListHardf = pd.file.listFiles(hard)
+local levelListCustomf = pd.file.listFiles(custom)
 
---------------    Tile Code   ---------------
+local getLevelNames = function(levelList, path)
+	local names = {}
+	for x = 1, #levelList do
+		local levelPath = path .. "/" .. levelList[x]
+		local levelInfo = pd.file.open(levelPath, pd.file.kFileRead)
+		names[x] = levelInfo:readline()
+		levelInfo:close()
+	end
+	return names
+end
 
+local levelListTest = getLevelNames(levelListTestf, test)
+local levelListEasy = getLevelNames(levelListEasyf, easy)
+local levelListMedium = getLevelNames(levelListMediumf, medium)
+local levelListHard = getLevelNames(levelListHardf, hard)
+local levelListCustom = getLevelNames(levelListCustomf, custom)
+local selectedGrid = 0
+local listFont = gfx.font.new("assets/blocky")
 
+listFont:setTracking(1)
+local listviewHeight = 150
+local lastDrawnListviewHeight = 0
+local sublistviewHeight = 19
+local lastDrawnSublistviewHeight = 0
+local selection
+local im = gfx.image.new("assets/05.png")
+local logo = gfx.image.new("assets/logo-01.png")
+local menuOptions = {
+	"TEST",
+	"EASY",
+	"MEDIUM",
+	"HARD",
+	"CUSTOM"
+}
+local listview = playdate.ui.gridview.new(0, 10)
+local sublistview = playdate.ui.gridview.new(0, 10)
+listview.backgroundImage = playdate.graphics.nineSlice.new("assets/shadowbox", 4, 4, 45, 45)
+listview:setNumberOfRows(#menuOptions)
+listview:setCellPadding(0, 0, 13, 13)
+listview:setContentInset(24, 24, 1, 5)
+listview.scrollCellsToCenter = false
+sublistview.backgroundImage = listview.backgroundImage
+sublistview:setCellPadding(0, 0, 13, 13)
+sublistview:setContentInset(24, 24, 1, 5)
 
+local menuFirstLoad = function()
+	if selectedGrid == 0 then
+		print("drawing LIST")
+		gfx.setColor(gfx.kColorWhite)
+		gfx.fillRect(18, 80, 160, 220)
+		listview:drawInRect(18, 80, 160, listviewHeight)
+		lastDrawnListviewHeight = listviewHeight
+		gfx.setColor(gfx.kColorBlack)
+		logo:draw(18, 20)
+	end
+	if selectedGrid == 1 then
+		print("drawing SUBLIST")
+		gfx.setColor(gfx.kColorWhite)
+		gfx.fillRect(18, 80, 160, 220)
+		sublistview:drawInRect(18, 80, 160, sublistviewHeight)
+		logo:draw(18, 20)
+		lastDrawnSublistviewHeight = sublistviewHeight
+	end
+	if pd.getButtonState() == 0 then
+		firstLoad = false
+	end
+end
 
+function listview:drawCell(section, row, column, selected, x, y, width, height)
+	if selected then
+		gfx.setColor(gfx.kColorBlack)
+		gfx.fillRoundRect(x, y, width, 20, 4)
+	else
+		gfx.setImageDrawMode(gfx.kDrawModeCopy)
+	end
+	gfx.setFont(listFont)
+	gfx.drawTextInRect(menuOptions[row], x + 6, y + 6, width, height + 2, nil, "...", kTextAlignment.left)
+end
 
----------------  Player Code  ---------------
+function sublistview:drawCell(section, row, column, selected, x, y, width, height)
+	if selected then
+		gfx.setColor(gfx.kColorBlack)
+		gfx.fillRoundRect(x, y, width, 20, 4)
+	else
+		gfx.setImageDrawMode(gfx.kDrawModeCopy)
+	end
+	gfx.setFont(listFont)
+	if selection == 1 then
+		gfx.drawTextInRect(levelListTest[row], x + 6, y + 6, width, height + 2, nil, "...", kTextAlignment.left)
+	elseif selection == 2 then
+		gfx.drawTextInRect(levelListEasy[row], x + 6, y + 6, width, height + 2, nil, "...", kTextAlignment.left)
+	elseif selection == 3 then
+		gfx.drawTextInRect(levelListMedium[row], x + 6, y + 6, width, height + 2, nil, "...", kTextAlignment.left)
+	elseif selection == 4 then
+		gfx.drawTextInRect(levelListHard[row], x + 6, y + 6, width, height + 2, nil, "...", kTextAlignment.left)
+	elseif selection == 5 then
+		gfx.drawTextInRect(levelListCustom[row], x + 6, y + 6, width, height + 2, nil, "...", kTextAlignment.left)
+	end
+end
 
+local listviewTimer
+local animateListviewOpen = function()
+	listviewTimer = playdate.timer.new(300, listviewHeight, 150, playdate.easingFunctions.outCubic)
+	
+	function listviewTimer.updateCallback(timer)
+		listviewHeight = timer.value
+	end
+	
+	function listviewTimer.timerEndedCallback(timer)
+		listviewHeight = timer.value
+		listviewTimer = nil
+	end
+end
+local animateListviewClosed = function()
+	listviewTimer = playdate.timer.new(300, listviewHeight, 19, playdate.easingFunctions.outCubic)
+	
+	function listviewTimer.updateCallback(timer)
+		listviewHeight = timer.value
+	end
+	
+	function listviewTimer.timerEndedCallback(timer)
+		listviewHeight = timer.value
+		listviewTimer = nil
+		selectedGrid = 1
+		animateSublistviewOpen()
+	end
+end
 
+function animateSublistviewOpen()
+	listviewTimer = playdate.timer.new(300, sublistviewHeight, 150, playdate.easingFunctions.outCubic)
+	
+	function listviewTimer.updateCallback(timer)
+		sublistviewHeight = timer.value
+	end
+	
+	function listviewTimer.timerEndedCallback(timer)
+		sublistviewHeight = timer.value
+		listviewTimer = nil
+	end
+end
 
--- OLD FUNCTION WITH INEFFICENT LEVEL STORAGE BELOW (im kepping this because that looping function might be useful to look at later)
+local animateSublistviewClosed = function()
+	listviewTimer = playdate.timer.new(300, sublistviewHeight, 19, playdate.easingFunctions.outCubic)
+	
+	function listviewTimer.updateCallback(timer)
+		sublistviewHeight = timer.value
+	end
+	
+	function listviewTimer.timerEndedCallback(timer)
+		sublistviewHeight = timer.value
+		listviewTimer = nil
+		selectedGrid = 0
+		animateListviewOpen()
+	end
+end
+local enterSelection = function()
+	selection = listview:getSelectedRow()
+	if selection == 1 then
+		sublistview:setNumberOfRows(#levelListTest)
+	elseif selection == 2 then
+		sublistview:setNumberOfRows(#levelListEasy)
+	elseif selection == 3 then
+		sublistview:setNumberOfRows(#levelListMedium)
+	elseif selection == 4 then
+		sublistview:setNumberOfRows(#levelListHard)
+	elseif selection == 5 then
+		sublistview:setNumberOfRows(#levelListCustom)
+	end
+	animateListviewClosed()
+end
+local exitSelection = function()
+	animateSublistviewClosed()
+	sublistview:setSelectedRow(1)
+end
 
---grid = {{1,1,1},{1,12,23},{1,5,20},{1,25,15}} --list of all elements and their locations in the 20x24 grid, for now there is only one element 1=box
-                                                -- in the future making these arrays will be automated
---[[
-function gridDraw(grid) -- takes a table of level data, makes a single image to print out of all the shapes
-    --gfx.setColor(gfx.kColorWhite)
-    --gfx.fillRect(0,0,400,240)
-    gfx.setColor(gfx.kColorBlack)
-    local backgroundImage = gfx.image.new(400,240)
+function playdate.AButtonUp()
+	if STATE == "menu" and not firstLoad then
+		if selectedGrid == 0 then
+			enterSelection()
+		else
+			STATE = "level"
+			local lvlSelected = sublistview:getSelectedRow()
+			local lvlPath
+			if selection == 1 then
+				lvlPath = test .. "/" .. levelListTestf[lvlSelected]
+			elseif selection == 2 then
+				lvlPath = easy .. "/" .. levelListEasyf[lvlSelected]
+			elseif selection == 3 then
+				lvlPath = medium .. "/" .. levelListMediumf[lvlSelected]
+			elseif selection == 4 then
+				lvlPath = hard .. "/" .. levelListHardf[lvlSelected]
+			elseif selection == 5 then
+				lvlPath = custom .. "/" .. levelListCustomf[lvlSelected]
+			end
+			if lvlPath ~= nil then
+				levelSTART(lvlPath)
+			else
+				print("no level selected!")
+			end
+		end
+	end
+end
+
+function playdate.BButtonUp()
+	if STATE == "menu" and not firstLoad and selectedGrid == 1 then
+		exitSelection()
+	else
+	end
+end
+
+function playdate.upButtonDown()
+	if STATE == "menu" and not firstLoad then
+		if selectedGrid == 0 then
+			listview:selectPreviousRow(true)
+		else
+			sublistview:selectPreviousRow(false)
+		end
+	end
+end
+
+function playdate.downButtonDown()
+	if STATE == "menu" and not firstLoad then
+		if selectedGrid == 0 then
+			listview:selectNextRow(true)
+		else
+			sublistview:selectNextRow(false)
+		end
+	end
+end
+
+local menuMode = function()
+	playdate.timer.updateTimers()
+	if firstLoad then
+		menuFirstLoad()
+	end
+	if selectedGrid == 0 and (lastDrawnListviewHeight ~= listviewHeight or listview.needsDisplay == true) then
+		print("drawing LIST")
+		gfx.setColor(gfx.kColorWhite)
+		gfx.fillRect(18, 80, 160, 220)
+		listview:drawInRect(18, 80, 160, listviewHeight)
+		lastDrawnListviewHeight = listviewHeight
+		gfx.setColor(gfx.kColorBlack)
+		logo:draw(18, 20)
+	end
+	if selectedGrid == 1 and (lastDrawnSublistviewHeight ~= sublistviewHeight or sublistview.needsDisplay == true) then
+		print("drawing SUBLIST")
+		gfx.setColor(gfx.kColorWhite)
+		gfx.fillRect(18, 80, 160, 220)
+		sublistview:drawInRect(18, 80, 160, sublistviewHeight)
+		logo:draw(18, 20)
+		lastDrawnSublistviewHeight = sublistviewHeight
+	end
+end
+local gridDraw = function(grid)
+	gfx.setColor(gfx.kColorBlack)
+	local backgroundImage = gfx.image.new(400, 240)
 	gfx.pushContext(backgroundImage)
-    for _, g in ipairs(grid)do --reads the second two numbers in each entry, 
-                               -- can read first number for item type later
-        gfx.fillRect(g[2]*tileSize, g[3]*tileSize, tileSize, tileSize)
-    
-    end
-    gfx.popContext()
-	return backgroundImage
-
-end
-]]
-
-
-
-
---TESTING FILE READING
--- idk how to do json and it looks like i would need to code in C to do anything more fancy 
--- so txt files it is!
--- at least playdate got built in save functionality, but level reading/writing will have to be kinda janky
--- plan is to make the level editor in love2D (or HTML? that seems less fun)
--- LEVEL DATA THAT IS NEEDED:
---[[
-1. coordinate pairs of all onscreen blocks
-2. coordinate pairs of all entities/other objects (ex: player start pos and level finish location)
-3. level name
-4. level 'location' (file structure)
-5. other stuff ill think of later
-]]
-
-local function gridDraw(grid)
-    gfx.setColor(gfx.kColorBlack)
-    local backgroundImage = gfx.image.new(400,240)
-	gfx.pushContext(backgroundImage)
-    for x = 1,40,1 do  --dont need to draw out of bounds squares (full range is 0-41 and 0-25)
-        for y =1,24,1 do
-            if grid[x][y] ~= 0 then
-                 gfx.fillRect((x-1)*tileSize, (y-1)*tileSize, tileSize, tileSize)
-                 --grid[x][y].draw() --i think this should just work?
-            end
-        end
-    end
-    gfx.popContext()
+	for x = 1, 40 do
+		for y = 1, 24 do
+			if grid[x][y] ~= 0 then
+				grid[x][y]:draw()
+			end
+		end
+	end
+	gfx.popContext()
 	return backgroundImage
 end
+local levelRead = function(levelPath)
+	local grid = table.create(42, 0)
+	local itemType = 0
+	for i = 0, 41 do
+		grid[i] = table.create(26, 0)
+	end
+	for x = 0, 41 do
+		for y = 0, 25 do
+			if x == 0 or y == 0 or x == 41 or y == 25 then
+				grid[x][y] = Tile(x, y)
+			else
+				grid[x][y] = Empty(x, y)
+			end
+		end
+	end
 
-local function levelRead(levelPath) --takes path to level file, returns array(s) of all data
-    local grid = table.create(42,0)    
-    local itemType = 0
-    for i = 0,41,1 do
-        grid[i] = table.create(26,0)
-    end
-    for x = 0,41,1 do
-        for y =0,25,1 do
-            if (x == 0 or y == 0 or x == 41 or y == 25)then -- fill in the borders
-                --grid[x][y] = 1 -- border walls 
-                grid[x][y] = Tile(x,y)
-            else
-                grid[x][y] = itemType -- empty space
-            end
-        end
-    end
-    local levelInfo = pd.file.open(levelPath, pd.file.kFileRead)
-    local infoX = levelInfo:readline() -- do this once to get the levelname out of the way
-          infoX = levelInfo:readline()
-    local infoY = levelInfo:readline()
-    local pX, pY = infoX*10 - 5, infoY*10 -6
-
-    while infoX ~= nil do
-        local itemType = tonumber(levelInfo:readline())
-        print("item: ", itemType)
-        if itemType == nil then
-           break
-        end
-        while (infoX == infoY ~= 0) do
-            infoX = tonumber(levelInfo:readline())
-            infoY = tonumber(levelInfo:readline())
-            if infoX == nil or infoY == nil then break end
-            if infoX ~= 0 then  
-                print("coord: ", infoX, infoY)
-                --grid[infoX][infoY] = itemType
-                grid[infoX][infoY] = Tile(infoX, infoY)
-            end
-        end
-    end
-    return pX,pY, grid
+	local levelInfo = pd.file.open(levelPath, pd.file.kFileRead)
+	local infoX = levelInfo:readline()
+	infoX = levelInfo:readline()
+	local infoY = levelInfo:readline()
+	local pX, pY = infoX * 10 - 5, infoY * 10 - 6
+	infoX = tonumber(levelInfo:readline())
+	infoY = tonumber(levelInfo:readline())
+	print(infoX, infoY)
+	grid[infoX][infoY] = Goal(infoX, infoY)
+	while infoX ~= nil do
+		local itemType = tonumber(levelInfo:readline())
+		print("item: ", itemType)
+		if itemType == nil then
+			break
+		end
+		while infoX ~= 0 and infoY ~= 0 do
+			infoX = tonumber(levelInfo:readline())
+			infoY = tonumber(levelInfo:readline())
+			if infoX == nil or infoY == nil then
+				break
+			end
+			if itemType == 1 then
+				grid[infoX][infoY] = Tile(infoX, infoY)
+			elseif itemType == 2 then
+			elseif itemType == 3 then
+			elseif itemType == 4 then
+			elseif itemType == 5 then
+				grid[infoX][infoY] = SpikeU(infoX, infoY)
+			elseif itemType == 6 then
+				grid[infoX][infoY] = SpikeR(infoX, infoY)
+			elseif itemType == 7 then
+				grid[infoX][infoY] = SpikeD(infoX, infoY)
+			elseif itemType == 8 then
+				grid[infoX][infoY] = SpikeL(infoX, infoY)
+			end
+		end
+		infoX = 1
+		infoY = 1
+		print("done with: ", itemType)
+	end
+	return pX, pY, grid
 end
 
-
-local function levelLoad(levelPath) --takes a constructed level grid, makes the player and returns a drawable image
-    local playerPosX, playerPosY, levelGrid = levelRead(levelPath)
-    local player = Player(playerPosX, playerPosY, levelGrid)
-    local backgroundImage = gridDraw(levelGrid)
+local levelLoad = function(levelPath)
+	local playerPosX, playerPosY, levelGrid = levelRead(levelPath)
+	local player = Player(playerPosX, playerPosY, levelGrid)
+	local backgroundImage = gridDraw(levelGrid)
+	firstLoad = true
 	return player, backgroundImage
-    
+end
+local levelExit = function()
+end
+local levelNext = function()
 end
 
-local function levelExit() --changes game state back to menu (won't code until i have a menu)
-
+function levelSTART(lvlPath)
+	player, levelTerrain = levelLoad(lvlPath)
+	player:add()
 end
-
-local function levelNext() --goes right to the next level 
---(tbd if this is actually nessisary or if i can just do a level load again)
-end
-
-local player, levelTerrain = levelLoad("./levels/test/gridTest.txt")
---local levelTerrain = levelLoad(levelTest)
-player:add()  -- these should be handled by level load
-
-
 
 function pd.update()
-    --gfx.setColor(gfx.kColorWhite)
-    --gfx.fillRect(0,0,400,240)
-    gfx.sprite.update()
-    pd.drawFPS(0, 0)
-    levelTerrain:draw(0,0)
-    local gridX = player:getX() 
-    local gridY = player:getY()
-    --print(gridX,gridY)
-    --gfx.setColor(gfx.kColorXOR)
-    --gfx.drawRect((gridX)*10, (gridY)*10, 10,10) -- H
-    --gfx.drawRect((gridX)*10, (gridY-1)*10, 10,10) -- E
-    --gfx.drawRect((gridX)*10, (gridY-2)*10, 10,10) -- C
-    --gfx.drawRect((gridX-1)*10, (gridY-2)*10, 10,10) -- B
-    --gfx.drawRect((gridX-1)*10, (gridY)*10, 10,10) -- G
-    --gfx.drawRect((gridX-2)*10, (gridY)*10, 10,10) -- F
-    --gfx.drawRect((gridX-2)*10, (gridY-2)*10, 10,10) -- A
-    --gfx.drawRect((gridX-2)*10, (gridY-1)*10, 10,10) -- D
+	if STATE == "menu" then
+		menuMode()
+	elseif STATE == "level" then
+		gfx.sprite.update()
+		pd.drawFPS(0, 0)
+		levelTerrain:draw(0, 0)
 
-    --if player:getDir() then
-    --   gfx.drawRect((gridX-2)*10, (gridY-1)*10, 10,10)
-    --else
-    --   gfx.drawRect((gridX)*10, (gridY-1)*10, 10,10)
-    --end
+        --local gridX = player:getX() 
+        --local gridY = player:getY()
+        --print(gridX,gridY)
+        --gfx.setColor(gfx.kColorXOR)
+        --gfx.drawRect((gridX)*10, (gridY)*10, 10,10) -- H
+        --gfx.drawRect((gridX)*10, (gridY-1)*10, 10,10) -- E
+        --gfx.drawRect((gridX)*10, (gridY-2)*10, 10,10) -- C
+        --gfx.drawRect((gridX-1)*10, (gridY-2)*10, 10,10) -- B
+        --gfx.drawRect((gridX-1)*10, (gridY)*10, 10,10) -- G
+        --gfx.drawRect((gridX-2)*10, (gridY)*10, 10,10) -- F
+        --gfx.drawRect((gridX-2)*10, (gridY-2)*10, 10,10) -- A
+        --gfx.drawRect((gridX-2)*10, (gridY-1)*10, 10,10) -- D
 
+        --if player:getDir() then
+        --   gfx.drawRect((gridX-2)*10, (gridY-1)*10, 10,10)
+        --else
+        --   gfx.drawRect((gridX)*10, (gridY-1)*10, 10,10)
+        --end
+
+	elseif STATE == "levelFINISH" then
+		if firstLoad then
+			player:remove()
+			gfx.clear(gfx.kColorWhite)
+			gfx.drawText("LEVEL CLEAR!!!", 150, 100)
+			gfx.drawText("PRESS BUTTON TO GO BACK TO MENU", 90, 120)
+			if pd.getButtonState() == 0 then
+				firstLoad = false
+			end
+		elseif pd.getButtonState() ~= 0 then
+			gfx.clear(gfx.kColorWhite)
+			STATE = "menu"
+			firstLoad = true
+		end
+	elseif STATE == "levelEXIT" then
+		player:remove()
+		gfx.clear(gfx.kColorWhite)
+		STATE = "menu"
+		firstLoad = true
+	elseif STATE == "dead" then
+		gfx.sprite.update()
+		pd.drawFPS(0, 0)
+		levelTerrain:draw(0, 0)
+		gfx.setColor(gfx.kColorWhite)
+		gfx.fillRect(120, 85, 160, 80)
+		gfx.setColor(gfx.kColorBlack)
+		gfx.fillRect(125, 90, 150, 70)
+		gfx.drawText("YOU DIED!!!", 135, 100)
+		gfx.drawText("PRESS A TO RETRY", 135, 120)
+		gfx.drawText("PRESS B TO EXIT", 135, 140)
+	end
+	pd.timer:updateTimers()
 end
 
 function Player:getX()
-    return math.floor(((player.position.dx)/10)+1)
+	return math.floor(player.position.dx / 10 + 1)
 end
 
 function Player:getY()
-    return math.floor(((player.position.dy)/10)+1)
+	return math.floor(player.position.dy / 10 + 1)
 end
 
 function Player:getDir()
-    return player.dir
+	return player.dir
 end
