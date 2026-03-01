@@ -6,7 +6,6 @@ import("CoreLibs/nineSlice")
 import("CoreLibs/timer")
 import("player")
 import("tiles")
-
 local pd = playdate
 local gfx = pd.graphics
 local vect = pd.geometry.vector2D.new
@@ -26,7 +25,6 @@ local levelListEasyf = pd.file.listFiles(easy)
 local levelListMediumf = pd.file.listFiles(medium)
 local levelListHardf = pd.file.listFiles(hard)
 local levelListCustomf = pd.file.listFiles(custom)
-
 local getLevelNames = function(levelList, path)
 	local names = {}
 	for x = 1, #levelList do
@@ -37,7 +35,6 @@ local getLevelNames = function(levelList, path)
 	end
 	return names
 end
-
 local levelListTest = getLevelNames(levelListTestf, test)
 local levelListEasy = getLevelNames(levelListEasyf, easy)
 local levelListMedium = getLevelNames(levelListMediumf, medium)
@@ -45,7 +42,6 @@ local levelListHard = getLevelNames(levelListHardf, hard)
 local levelListCustom = getLevelNames(levelListCustomf, custom)
 local selectedGrid = 0
 local listFont = gfx.font.new("assets/blocky")
-
 listFont:setTracking(1)
 local listviewHeight = 150
 local lastDrawnListviewHeight = 0
@@ -71,7 +67,6 @@ listview.scrollCellsToCenter = false
 sublistview.backgroundImage = listview.backgroundImage
 sublistview:setCellPadding(0, 0, 13, 13)
 sublistview:setContentInset(24, 24, 1, 5)
-
 local menuFirstLoad = function()
 	if selectedGrid == 0 then
 		print("drawing LIST")
@@ -309,7 +304,6 @@ local levelRead = function(levelPath)
 			end
 		end
 	end
-
 	local levelInfo = pd.file.open(levelPath, pd.file.kFileRead)
 	local infoX = levelInfo:readline()
 	infoX = levelInfo:readline()
@@ -352,7 +346,6 @@ local levelRead = function(levelPath)
 	end
 	return pX, pY, grid
 end
-
 local levelLoad = function(levelPath)
 	local playerPosX, playerPosY, levelGrid = levelRead(levelPath)
 	local player = Player(playerPosX, playerPosY, levelGrid)
@@ -377,26 +370,6 @@ function pd.update()
 		gfx.sprite.update()
 		pd.drawFPS(0, 0)
 		levelTerrain:draw(0, 0)
-
-        --local gridX = player:getX() 
-        --local gridY = player:getY()
-        --print(gridX,gridY)
-        --gfx.setColor(gfx.kColorXOR)
-        --gfx.drawRect((gridX)*10, (gridY)*10, 10,10) -- H
-        --gfx.drawRect((gridX)*10, (gridY-1)*10, 10,10) -- E
-        --gfx.drawRect((gridX)*10, (gridY-2)*10, 10,10) -- C
-        --gfx.drawRect((gridX-1)*10, (gridY-2)*10, 10,10) -- B
-        --gfx.drawRect((gridX-1)*10, (gridY)*10, 10,10) -- G
-        --gfx.drawRect((gridX-2)*10, (gridY)*10, 10,10) -- F
-        --gfx.drawRect((gridX-2)*10, (gridY-2)*10, 10,10) -- A
-        --gfx.drawRect((gridX-2)*10, (gridY-1)*10, 10,10) -- D
-
-        --if player:getDir() then
-        --   gfx.drawRect((gridX-2)*10, (gridY-1)*10, 10,10)
-        --else
-        --   gfx.drawRect((gridX)*10, (gridY-1)*10, 10,10)
-        --end
-
 	elseif STATE == "levelFINISH" then
 		if firstLoad then
 			player:remove()
