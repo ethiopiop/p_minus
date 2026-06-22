@@ -1,6 +1,8 @@
 LEVEL NAME ## (idk if i can actually implement comments lmao, but this is just an example)
 1  ## first two numbers are ALWAYS player starting position X and Y (this will have to go into a different array)
 24
+12
+12 ## next two numbers are level goal
 1 ## next number is entity type to be placed (for now 1 is the only valid number, maybe level end trigger will have its own number)
 2 ## after that is pairs of coordinates 
 2 ## (for some reason the only read functions are either a whole line to string or just one bit read, which idk how to use the bit reading)
