@@ -13,6 +13,7 @@ function love.load()
     currentBrush = 1
     saveName = love.filesystem.read("pwd.txt")
     print (saveName)
+    timer = 0
 end
 
 function love.update()
@@ -27,6 +28,7 @@ function love.update()
     elseif love.mouse.isDown(2) then
         blockGrid[gridX][gridY] = 0
     end
+    timer = timer + .1
 end
 
 function love.keypressed(key, scancode, isrepeat)
@@ -42,16 +44,32 @@ function love.keypressed(key, scancode, isrepeat)
         save()
         print("saved to " .. saveName .. ".txt")
     elseif key == "l" then
-        loadLevel(saveName .. ".txt")
+        if timer < 20 then 
+            clearLevel()
+            loadLevel(saveName .. ".txt")
+        end
+        timer = 0 
+    elseif key == "r" then
+        rotate()
+    elseif key == "v" then
+        currentBrush = 5 -- place spikes "vvv"
+    elseif key == "backspace" then
+        print(timer)
+        if timer < 20 then 
+            clearLevel()
+        end
+        timer = 0 
     end
 end
 
 function save() -- write to level location
+    local saveable = false
     saveData = saveName .. "\r\n"
     for i = 1,41,1 do
         for j = 1,25,1 do
             if blockGrid[i][j] == -1 then
                 saveData = saveData .. tostring(i-1) .. "\r\n" .. tostring(j-1) .."\r\n"
+                saveable = true
             end
         end
     end
@@ -59,9 +77,11 @@ function save() -- write to level location
         for j = 1,25,1 do
             if blockGrid[i][j] == -2 then
                 saveData = saveData .. tostring(i-1) .. "\r\n" .. tostring(j-1) .."\r\n"
+                saveable = true
             end
         end
     end
+    if saveable then
     saveObject(1);
     saveObject(5);
     saveObject(6);
@@ -69,6 +89,9 @@ function save() -- write to level location
     saveObject(8);
     local worked, message = love.filesystem.write(saveName .. ".txt", saveData)
     print(worked, message)
+    else
+        print("NO START OR END OF LEVEL -- DID NOT SAVE")
+    end
 end
 
 function love.draw()
@@ -84,11 +107,18 @@ function drawCursor(mouseX, mouseY)
     if love.mouse.isDown(2) then
         love.graphics.setColor(1,1,1)
     end
+    if currentBrush == 1 then
     love.graphics.rectangle("fill", mouseX, mouseY, 20, 20)
-    if currentBrush == -1 then
+    elseif currentBrush == -1 then
+        love.graphics.rectangle("fill", mouseX, mouseY, 20, 20)
         love.graphics.setColor(.8,.8,.8)
         love.graphics.rectangle("fill", mouseX+5, mouseY+5, 10, 10)
+    elseif currentBrush == -2 then 
+        drawGoal(mouseX, mouseY)
+    elseif currentBrush > 4 and currentBrush <=8 then
+        drawSpike(currentBrush, mouseX,mouseY)
     end
+    
 end
 
 function drawLevel()
@@ -172,6 +202,37 @@ function loadLevel(level)
     end
 
 
+end
+
+function rotate()
+    if currentBrush % 4 == 0 then
+        currentBrush = currentBrush - 3
+    else
+        currentBrush = currentBrush + 1
+    end
+end
+
+function clearLevel()
+        local emptyGrid = {}
+    for i = 0,41,1 do
+        emptyGrid[i] = {}
+        for j = 0,26,1 do
+            emptyGrid[i][j] = 0
+        end
+    end
+    blockGrid = emptyGrid
+end
+
+function drawSpike(rotation, x, y)
+    if rotation == 5 then --U
+        love.graphics.polygon("line", x,y+20, x+5,y+14, x+10,y+20, x+15,y+14, x+20,y+20)
+    elseif rotation == 6 then --R
+        love.graphics.polygon("line", x,y, x+6,y+5, x,y+10, x+6,y+15, x,y+20)
+    elseif rotation == 7 then --D
+        love.graphics.polygon("line", x,y, x+5,y+6, x+10,y, x+15,y+6, x+20,y)
+    elseif rotation == 8 then --L
+        love.graphics.polygon("line", x+20,y, x+14,y+5, x+20,y+10, x+14,y+15, x+20,y+20)
+    end
 end
 
 --stuff needed:
