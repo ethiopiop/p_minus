@@ -107,7 +107,7 @@ function drawCursor(mouseX, mouseY)
     if love.mouse.isDown(2) then
         love.graphics.setColor(1,1,1)
     end
-    if currentBrush == 1 then
+    if currentBrush >0 and currentBrush <= 4 then
     love.graphics.rectangle("fill", mouseX, mouseY, 20, 20)
     elseif currentBrush == -1 then
         love.graphics.rectangle("fill", mouseX, mouseY, 20, 20)

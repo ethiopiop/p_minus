@@ -400,3 +400,14 @@ function SpikeL:isColliding(tileLocation, playerX, playerY)
 	end
 	return false, xDiff, yDiff, self.tileType
 end
+
+
+-- simple tile ideas (stuff that shouldnt need custom collision code):
+-- trampolines (give bigger jump/much bigger bounce, bounce you a bit for just landing on them)
+
+-- ones below will not have corner collisions (maybe)
+-- tile that kills you for dashing into it
+-- tile that kills you for not dashing through it
+-- one ways (should be easy the way i want to implement them?)
+
+-- NO MORE SPIKES AND JUNK THAT TAKE UP HALF A TILE (THAT WAS AWFUL)

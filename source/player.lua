@@ -200,10 +200,11 @@ function Player:checkInputs()
 	if pd.buttonJustPressed("a") and not self.grounded and self.walled == 0 then
 		self.bufferTimer = 0
 	end
-	if pd.buttonJustPressed("a") and self.grounded or self.bufferTimer < 3 and self.grounded or pd.buttonJustPressed("a") and self.cyoteTimer < 6 then
+	if (pd.buttonJustPressed("a") and self.grounded) or (self.bufferTimer < 3 and self.grounded) or (pd.buttonJustPressed("a") and self.cyoteTimer < 6) then
 		self.walled = 0
 		if self.dashJumpBufferTimer > 0 then
 			self:jumpStart()
+			--print("jump", self.bufferTimer, self.cyoteTimer)
 		elseif math.abs(self.dashType) == 1 then
 			self:dashJump()
 		else
@@ -211,6 +212,7 @@ function Player:checkInputs()
 		end
 		self.bufferTimer = 20
 		self.dashJumpBufferTimer = 20
+		self.cyoteTimer = 20
 		self.jumpTimer = 0
 	end
 	if not (not pd.buttonJustPressed("a") or self.walled == 0 or self.grounded) or self.bufferTimer < 4 and self.walled ~= 0 and not self.grounded then
@@ -277,10 +279,12 @@ function Player:dashBounce()
 end
 
 function Player:dashJump()
+	
 	self.velocity.dx = self.dashSpeed.dx * self.dashType * 0.8
 	self.velocity.dy = self.velocity.dy - self.jumpY * 0.66
 	self.grounded = false
 	self.dashing = 0
+
 end
 
 function Player:stompJump()
@@ -382,11 +386,11 @@ function Player:handleCollision(abc, X, Y, xDiff, yDiff, tile)
 			self:handleCollisionH(X, Y, xDiff, yDiff)
 		end
 	elseif tile == 999 then
-		print("end level here")
+		--print("end level here")
 		STATE = "levelFINISH"
 	elseif tile > 4 and tile <= 8 then
 		self:deathHandler()
-		print("killed by: ", abc)
+		--print("killed by: ", abc)
 	end
 end
 
@@ -405,6 +409,12 @@ end
 function Player:checkCloseCollisions(X, Y, x, y)
 	if self.dir then
 		local wallHit = false
+		if self.environment[X - 1][Y]:getTileType() ~= 0 and self.environment[X - 1][Y]:isSolid() == false then --check behind for spikes
+			local collide, xDiff, yDiff, tile = self.environment[X - 1][Y]:isColliding("D", x, y)
+			if collide then
+				self:handleCollision("D", X, Y, xDiff, yDiff, tile)
+			end
+		end
 		if self.environment[X + 1][Y]:getTileType() ~= 0 then
 			local collide, xDiff, yDiff, tile = self.environment[X + 1][Y]:isColliding("E", x, y)
 			if collide then
@@ -434,6 +444,12 @@ function Player:checkCloseCollisions(X, Y, x, y)
 		end
 	else
 		local wallHit = false
+		if self.environment[X + 1][Y]:getTileType() ~= 0 and self.environment[X - 1][Y]:isSolid() == false then --check behind for spikes
+			local collide, xDiff, yDiff, tile = self.environment[X + 1][Y]:isColliding("E", x, y)
+			if collide then
+				self:handleCollision("E", X, Y, xDiff, yDiff, tile)
+			end
+		end
 		if self.environment[X - 1][Y]:getTileType() ~= 0 then
 			local collide, xDiff, yDiff, tile = self.environment[X - 1][Y]:isColliding("D", x, y)
 			if collide then
@@ -474,7 +490,7 @@ function Player:checkCloseCollisions(X, Y, x, y)
 			if self.environment[X - 1][Y - 1]:getTileType() ~= 0 then
 				local collide, xDiff, yDiff, tile = self.environment[X - 1][Y - 1]:isColliding("A", x, y)
 				if collide then
-					print("collide A")
+					--print("collide A")
 					self:handleCollision("A", X, Y, xDiff, yDiff, tile)
 				end
 			end
@@ -491,7 +507,7 @@ function Player:checkCloseCollisions(X, Y, x, y)
 		if self.environment[X][Y + 1]:isSolid() then
 			local collide, xDiff, yDiff, tile = self.environment[X][Y + 1]:isColliding("G", x, y)
 			if collide then
-				print("colliding G!!!!!!")
+				--print("colliding G!!!!!!")
 				self:handleCollision("G", X, Y, xDiff, yDiff, tile)
 				hitGround = true
 			end
@@ -517,8 +533,8 @@ function Player:checkCloseCollisions(X, Y, x, y)
 		if not self.environment[X][Y + 1]:isSolid() then
 			local collide, xDiff, yDiff, tile = self.environment[X][Y + 1]:isColliding("G", x, y)
 			if collide then
-				print("hit spike G!!!!!!")
-				print("spike on G")
+				--print("hit spike G!!!!!!")
+				--print("spike on G")
 				self:handleCollision("G", X, Y, xDiff, yDiff, tile)
 			end
 		end
@@ -542,11 +558,11 @@ function Player:handleCollisionA(X, Y, xDiff, yDiff)
 	elseif xDiff <= 3 and self.environment[X][Y - 1]:getTileType() == 0 then
 		self.position.dx = (X - 1) * 10 + self.size / 2 + 0.15
 		self.walled = 1
-		print("Corner Correct A", xDiff, yDiff)
+		--print("Corner Correct A", xDiff, yDiff)
 	else
 		self.velocity.dy = self.velocity.dy - self.velocity.dy
 		self.position.dy = Y * 10 - self.size / 2 + 0.15
-		print("Ycollide A", xDiff, yDiff)
+		--print("Ycollide A", xDiff, yDiff)
 	end
 end
 
@@ -559,16 +575,16 @@ function Player:handleCollisionC(X, Y, xDiff, yDiff)
 	if xDiff <= yDiff and self.environment[X][Y - 1]:isSolid() == false and self.dir == true then
 		self.velocity.dx = 0
 		self.position.dx = X * 10 - self.size / 2
-		print("Xcollide C", xDiff, yDiff)
+		--print("Xcollide C", xDiff, yDiff)
 		self.walled = 2
 	elseif xDiff <= 3 and self.environment[X][Y - 1]:getTileType() == 0 then
 		self.position.dx = X * 10 - self.size / 2
 		self.walled = 2
-		print("Corner Correct C")
+		--print("Corner Correct C")
 	else
 		self.velocity.dy = self.velocity.dy - self.velocity.dy
 		self.position.dy = Y * 10 - self.size / 2
-		print("Ycollide C")
+		--print("Ycollide C")
 	end
 end
 
@@ -589,9 +605,9 @@ function Player:handleCollisionF(X, Y, xDiff, yDiff)
 		self.velocity.dy = self.velocity.dy - self.velocity.dy
 		self.position.dy = Y * 10 - self.size / 2
 		self.grounded = true
-		print("Ycollide F", self.grounded, self.walled, self.dir)
+		--print("Ycollide F", self.grounded, self.walled, self.dir)
 	elseif self.environment[X - 1][Y]:getTileType() == 0 and yDiff <= 3 then
-		print(self.position.dy, "cornercorrect F")
+		--print(self.position.dy, "cornercorrect F")
 		self.position.dy = Y * 10 - self.size / 2
 		if self.velocity.dy < 0 then
 			self.velocity.dx = self.velocity.dx + 0.1
@@ -601,7 +617,7 @@ function Player:handleCollisionF(X, Y, xDiff, yDiff)
 	elseif self.environment[X][Y + 1]:getTileType() == 0 then
 		self.velocity.dx = 0
 		self.position.dx = (X - 1) * 10 + self.size / 2 + 0.15
-		print("Xcollide F")
+		--print("Xcollide F")
 		self.walled = 1
 	end
 end
