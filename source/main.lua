@@ -6,6 +6,7 @@ import("CoreLibs/nineSlice")
 import("CoreLibs/timer")
 import("player")
 import("tiles")
+import("entities")
 local pd = playdate
 local gfx = pd.graphics
 local vect = pd.geometry.vector2D.new
@@ -291,7 +292,8 @@ local gridDraw = function(grid)
 end
 local levelRead = function(levelPath)
 	local grid = table.create(42, 0)
-	local itemType = 0
+	local entities = {}
+	--local itemType = 0
 	for i = 0, 41 do
 		grid[i] = table.create(26, 0)
 	end
@@ -316,7 +318,7 @@ local levelRead = function(levelPath)
 	while infoX ~= nil do
 		local itemType = tonumber(levelInfo:readline())
 		print("item: ", itemType)
-		if itemType == nil then
+		if itemType == 0 then
 			break
 		end
 		while infoX ~= 0 and infoY ~= 0 do
@@ -344,14 +346,40 @@ local levelRead = function(levelPath)
 		infoY = 1
 		print("done with: ", itemType)
 	end
-	return pX, pY, grid
+	local info1, info2, info3 = 1, 1, 1
+	while info1 ~= nil do
+		local itemType = tonumber(levelInfo:readline())
+		if itemType == nil then break end
+		print("entity ", itemType)
+		while info1 ~=0 and info2 ~=0 and info3 ~=0 do
+			info1 = tonumber(levelInfo:readline())
+			info2 = tonumber(levelInfo:readline())
+			info3 = tonumber(levelInfo:readline())
+			if info1 == 0 and info2 == 0 and info3 == 0 then
+				break
+			end
+			if itemType == 1 then
+				local entity = Entity(info1, info2, info3)
+				table.insert(entities, entity)
+			elseif itemType == 2 then
+				local entity = Follower(info1, info2, info3)
+				table.insert(entities, entity)
+			end
+			print("added entity", itemType, info1, info2, info3)
+		end
+		print("done with entity", itemType, info1, info2, info3)
+		info1, info2, info3 = 1, 1, 1
+	end
+
+
+	return pX, pY, grid, entities
 end
 local levelLoad = function(levelPath)
-	local playerPosX, playerPosY, levelGrid = levelRead(levelPath)
-	local player = Player(playerPosX, playerPosY, levelGrid)
+	local playerPosX, playerPosY, levelGrid, entities = levelRead(levelPath)
+	local player = Player(playerPosX, playerPosY, levelGrid, entities)
 	local backgroundImage = gridDraw(levelGrid)
 	firstLoad = true
-	return player, backgroundImage
+	return player, backgroundImage, entities
 end
 local levelExit = function()
 end
@@ -359,7 +387,7 @@ local levelNext = function()
 end
 
 function levelSTART(lvlPath)
-	player, levelTerrain = levelLoad(lvlPath)
+	player, levelTerrain, entities = levelLoad(lvlPath)
 	player:add()
 end
 
@@ -370,6 +398,11 @@ function pd.update()
 		gfx.sprite.update()
 		pd.drawFPS(0, 0)
 		levelTerrain:draw(0, 0)
+		for _, thing in pairs(entities) do
+			thing:update(player)
+			thing:draw()
+		end
+		--print(player.position.dx, player.position.dy)
 	elseif STATE == "levelFINISH" then
 		if firstLoad then
 			player:remove()
@@ -392,6 +425,10 @@ function pd.update()
 	elseif STATE == "dead" then
 		gfx.sprite.update()
 		pd.drawFPS(0, 0)
+		for _, thing in pairs(entities) do
+			thing:draw()
+			thing:reset()
+		end
 		levelTerrain:draw(0, 0)
 		gfx.setColor(gfx.kColorWhite)
 		gfx.fillRect(120, 85, 160, 80)

@@ -64,9 +64,19 @@ function Player:init(x, y, env)
 	self.dy = self.position.dy
 end
 
+function Player:getPos()
+	return self.position.dx, self.position.dy, 5
+end
+
+function Player:kill()
+	self.dead = true
+	STATE = "dead"
+end
+
 function Player:update()
 	if not self.dead then
 		self:checkCollisions()
+		--self:checkEntites()
 		self:checkInputs()
 		self.position = self.position + self.velocity
 		self:moveTo(self.position:unpack())
@@ -89,6 +99,7 @@ function Player:draw()
 		gfx.fillRect(self.size / 4 - 1, self.size / 4 - 1, self.size / 2 + 1, self.size / 2 + 1)
 	end
 	gfx.popContext()
+	
 	return im
 end
 
