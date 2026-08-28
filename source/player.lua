@@ -76,7 +76,6 @@ end
 function Player:update()
 	if not self.dead then
 		self:checkCollisions()
-		--self:checkEntites()
 		self:checkInputs()
 		self.position = self.position + self.velocity
 		self:moveTo(self.position:unpack())

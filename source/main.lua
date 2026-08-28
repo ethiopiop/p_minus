@@ -364,6 +364,13 @@ local levelRead = function(levelPath)
 			elseif itemType == 2 then
 				local entity = Follower(info1, info2, info3)
 				table.insert(entities, entity)
+			elseif itemType == 3 then
+				local info4 = tonumber(levelInfo:readline())
+				local info5 = tonumber(levelInfo:readline())
+				local info6 = tonumber(levelInfo:readline())
+				local entity = Door(info1, info2, info3, info4, info5, info6)
+				table.insert(entities, entity)
+				print("added entity", itemType, info1, info2, info3, info4, info5, info6)
 			end
 			print("added entity", itemType, info1, info2, info3)
 		end

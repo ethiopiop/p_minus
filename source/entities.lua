@@ -115,11 +115,75 @@ function Follower:reset()
 	self.pos = {}
 end
 
+class("Door").extends(Entity)
+
+function Door:init(x, y, doorx, doory, hor, length) --6 info!!
+	self.id = 3
+	self.x = x
+	self.y = y
+	self.size = 5
+	self.doorX = doorx
+	self.doorY = doory
+	if hor == -1 then self.horizantal = true else self.horizantal = false end
+	if self.horizantal then 
+		self.doorWidth = length
+		self.doorHeight = 4
+	else
+		self.doorWidth = 4
+		self.doorHeight = length
+	end
+	self.closed = true
+end
+
+function Door:hitDoor(px, py, ps)
+	local left, right, top, bottom = px - ps, px+ps, py - ps, py+ps
+	local dl, dr, dt, db = self.doorX, self.doorX+self.doorWidth, self.doorY, self.doorY+self.doorHeight
+	if ((right > dl and left < dr) and (bottom > dt and top < db)) then
+		print("yes door")
+		return true
+	else
+		print("no door")
+		return false
+	end
+end
+
+function Door:update(player)
+	local pX, pY, pS = player:getPos()
+	if self.closed then
+		if self:collision(player) then --if you hit the button
+			self.closed = false
+		end
+		if self:hitDoor(pX, pY, pS) then
+				player:kill()
+		end
+	end
+end
+
+function Door:draw()
+	local x = self.x
+	local y = self.y
+	if self.closed then
+		gfx.setLineWidth(2)
+		gfx.drawRect(self.doorX, self.doorY, self.doorWidth, self.doorHeight)
+		gfx.setLineWidth(1)
+		gfx.drawLine(x - 3, y -3, x + 3, y +3)
+		gfx.drawLine(x+ 3, y - 3, x-3,y +3)
+	else
+		gfx.drawLine(x - 3, y -3, x-3, y +3)
+		gfx.drawLine(x+ 3, y - 3,x + 3, y +3 )
+	end
+end
+
+function Door:reset() 
+	self.closed = true
+end
+
 
 
 -- entities will have circle/ line hitboxes to keep things simpler
 -- i want mines (will be basic entity class) DONEZO (put it in the level editor)
 -- i want missiles I GOT CHASERS INSTEAD LFGGGG
--- i want doors/ buttons
+-- i want doors/ buttons DONEZO
 -- i want dust bunnies
+-- windbox? (how do i draw that??)
 -- (in that order, if i get burnt out by dust bunnies then its fine)
