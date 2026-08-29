@@ -139,10 +139,10 @@ function Door:hitDoor(px, py, ps)
 	local left, right, top, bottom = px - ps, px+ps, py - ps, py+ps
 	local dl, dr, dt, db = self.doorX, self.doorX+self.doorWidth, self.doorY, self.doorY+self.doorHeight
 	if ((right > dl and left < dr) and (bottom > dt and top < db)) then
-		print("yes door")
+		--print("yes door")
 		return true
 	else
-		print("no door")
+		--print("no door")
 		return false
 	end
 end
@@ -165,17 +165,76 @@ function Door:draw()
 	if self.closed then
 		gfx.setLineWidth(2)
 		gfx.drawRect(self.doorX, self.doorY, self.doorWidth, self.doorHeight)
-		gfx.setLineWidth(1)
 		gfx.drawLine(x - 3, y -3, x + 3, y +3)
 		gfx.drawLine(x+ 3, y - 3, x-3,y +3)
+		gfx.setLineWidth(1)
 	else
-		gfx.drawLine(x - 3, y -3, x-3, y +3)
-		gfx.drawLine(x+ 3, y - 3,x + 3, y +3 )
+		gfx.setLineWidth(2)
+		gfx.drawLine(x - 2, y -3, x-2, y +3)
+		gfx.drawLine(x+ 2, y - 3,x + 2, y +3 )
+		gfx.setLineWidth(1)
 	end
 end
 
 function Door:reset() 
 	self.closed = true
+end
+
+class("Wind").extends(Entity)
+
+function Wind:init(x,y,w,h, vx, vy)
+	self.id = 4
+	self.x = x
+	self.y = y
+	self.w = w
+	self.h = h
+	self.imvx = vx
+	self.imvy = vy
+	self.vx = vx/3
+	self.vy = vy/3
+	self.pat = gfx.image.new("images/wind.png")
+	self.imX = 0
+	self.imY = 0
+end
+
+function Wind:collision(p)
+	local px, py, ps = p:getPos()
+	local left, right, top, bottom = px - ps, px+ps, py - ps, py+ps
+	local dl, dr, dt, db = self.x, self.x+self.w, self.y, self.y+self.h
+	if ((right > dl and left < dr) and (bottom > dt and top < db)) then
+		return true
+	else
+		return false
+	end
+end
+
+function Wind:update(player)
+	local onFloor = player:getGrounded()
+		if self:collision(player) then
+			local pv = player:getVelocity()
+			if player:getWalled() == 0 then
+				pv.dx = pv.dx + self.vx end
+			if not onFloor then 
+				pv.dy = pv.dy + self.vy end
+			if self.vx ~= 0 then
+				if pv.dx > 0 then player:setDir(true) else player:setDir(false) end 
+			end
+			player:setVelocity(pv)
+		end
+	self.imX = (self.imX + self.imvx)%8
+	self.imY = (self.imY + self.imvy)%8
+	
+end
+
+function Wind:draw()
+	gfx.setPattern(self.pat, 8-self.imX, 8-self.imY)
+	gfx.fillRect(self.x, self.y, self.w, self.h)
+	gfx.setColor(gfx.kColorBlack)
+end
+
+function Wind:reset()
+	self.imX = 0
+	self.imY = 0
 end
 
 

@@ -68,6 +68,26 @@ function Player:getPos()
 	return self.position.dx, self.position.dy, 5
 end
 
+function Player:setDir(dir)
+	self.dir = dir
+end
+
+function Player:getWalled()
+	return self.walled
+end
+
+function Player:getGrounded()
+	return self.grounded
+end
+
+function Player:getVelocity()
+	return self.velocity
+end
+
+function Player:setVelocity(dv)
+	self.velocity = dv
+end
+
 function Player:kill()
 	self.dead = true
 	STATE = "dead"
@@ -78,6 +98,7 @@ function Player:update()
 		self:checkCollisions()
 		self:checkInputs()
 		self.position = self.position + self.velocity
+		--print(self.velocity.dx)
 		self:moveTo(self.position:unpack())
 		if self.dashCheck ~= self.dashCount then
 			self:setImage(self:draw())
@@ -172,9 +193,9 @@ function Player:checkInputs()
 				end
 			else
 				self.velocity.dx = self.velocity.dx - self.velocity.dx / math.abs(self.velocity.dx) * self.drag
-				if math.abs(self.velocity.dx) <= self.drag then
-					self.velocity.dx = 0
-				end
+				--if math.abs(self.velocity.dx) <= self.drag then
+					--self.velocity.dx = 0
+				--end
 			end
 		end
 	end
@@ -413,6 +434,9 @@ function Player:checkCollisions()
 	end
 	local gridX = math.floor(self.position.dx / 10 + 1)
 	local gridY = math.floor(self.position.dy / 10 + 1)
+	print(gridX, gridY)
+	if gridX >= 41 or gridX <=0 then self:kill() print("killed by OOB X")end -- kill you before OOB error
+	if gridY >= 25 or gridY <=0 then self:kill() print("killed by OOB Y")end
 	self:checkCloseCollisions(gridX, gridY, self.position.dx, self.position.dy)
 end
 

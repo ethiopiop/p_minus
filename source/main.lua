@@ -355,7 +355,7 @@ local levelRead = function(levelPath)
 			info1 = tonumber(levelInfo:readline())
 			info2 = tonumber(levelInfo:readline())
 			info3 = tonumber(levelInfo:readline())
-			if info1 == 0 and info2 == 0 and info3 == 0 then
+			if (info1 == 0 and info2 == 0 and info3 == 0) or info1 == nil then
 				break
 			end
 			if itemType == 1 then
@@ -371,6 +371,13 @@ local levelRead = function(levelPath)
 				local entity = Door(info1, info2, info3, info4, info5, info6)
 				table.insert(entities, entity)
 				print("added entity", itemType, info1, info2, info3, info4, info5, info6)
+			elseif itemType == 4 then
+				local info4 = tonumber(levelInfo:readline())
+				local info5 = tonumber(levelInfo:readline())
+				local info6 = tonumber(levelInfo:readline())
+				local entity = Wind(info1, info2, info3, info4, info5, info6)
+				table.insert(entities, entity)
+				print("added entity", itemType, info1, info2, info3, info4, info5, info6)
 			end
 			print("added entity", itemType, info1, info2, info3)
 		end
@@ -378,7 +385,7 @@ local levelRead = function(levelPath)
 		info1, info2, info3 = 1, 1, 1
 	end
 
-
+	
 	return pX, pY, grid, entities
 end
 local levelLoad = function(levelPath)
