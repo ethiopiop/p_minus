@@ -243,6 +243,6 @@ end
 -- i want mines (will be basic entity class) DONEZO (put it in the level editor)
 -- i want missiles I GOT CHASERS INSTEAD LFGGGG
 -- i want doors/ buttons DONEZO
--- i want dust bunnies
--- windbox? (how do i draw that??)
+-- i want dust bunnies (moved to lower priority, but i would want spinners and track movers)
+-- windbox? DONEZO
 -- (in that order, if i get burnt out by dust bunnies then its fine)
