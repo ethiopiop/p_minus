@@ -1,4 +1,5 @@
 love.window.setMode(800,480)
+local justpress = true
 
 function love.load()
     local emptyGrid = {}
@@ -10,6 +11,7 @@ function love.load()
     end
     blockGrid = emptyGrid
     entities = {}
+    entityMode = false
     love.mouse.setVisible(false)
     currentBrush = 1
     saveName = love.filesystem.read("pwd.txt")
@@ -17,49 +19,210 @@ function love.load()
     timer = 0
 end
 
+function getInfo(message)
+    local info = {}
+    while not love.keyboard.isDown("return")do
+    print(message)
+    love.event.wait()
+    end
+    for line in love.filesystem.lines("info.txt") do 
+        table.insert(info, line)
+    end
+    return info
+end
+
 function love.update()
     mouseLocationX, mouseLocationY = love.mouse.getPosition()
-    local gridX = math.floor(mouseLocationX/20)+2
-    local gridY = math.floor(mouseLocationY/20)+2
-    if love.mouse.isDown(1) then
-        if currentBrush < 0 then
-            removeDupes()
+    --print(currentBrush)
+    if not entityMode then
+        local gridX = math.floor(mouseLocationX/20)+2
+        local gridY = math.floor(mouseLocationY/20)+2
+        if love.mouse.isDown(1) then
+            if currentBrush < 0 then
+                removeDupes()
+            end
+            blockGrid[gridX][gridY] = currentBrush
+        elseif love.mouse.isDown(2) then
+            blockGrid[gridX][gridY] = 0
         end
-        blockGrid[gridX][gridY] = currentBrush
-    elseif love.mouse.isDown(2) then
-        blockGrid[gridX][gridY] = 0
+    else
+        if love.keyboard.isDown("space") then
+            gameX = math.floor(mouseLocationX/2) --exact PD coords
+            gameY = math.floor(mouseLocationY/2)
+        else
+            gameX = math.ceil((mouseLocationX/2)-((mouseLocationX/2)%5)) --snap to finer grid
+            gameY = math.ceil((mouseLocationY/2)-((mouseLocationY/2)%5)) 
+        end
+        if love.keyboard.isDown("right") then
+            gameX = gameX + 5
+        end
+        if love.mouse.isDown(1) then
+            if justpress then
+            placeEntity(currentBrush)
+            end
+            justpress = false
+        elseif love.mouse.isDown(2) then
+            if love.keyboard.isDown("lshift") then
+                editEntity(gameX, gameY)
+            else
+                if justpress then
+                removeEntity(gameX, gameY)
+                end
+                justpress = false
+            end
+        else
+            justpress = true
+        end
     end
     timer = timer + .1
 end
 
+function removeEntity(x,y)
+    key = getEntity(x,y)
+    table.remove(entities, key)
+end
+
+function editEntity(x,y)
+    local key = getEntity(x,y)
+    if key == nil then
+        print("nothing here")
+        return
+    end
+    if entities[key].id == 1 then
+        stuff = getInfo("edit mine info offset +x,+y, state (-1 or -2)")
+        entities[key].x = entities[key].x + tonumber(stuff[1])
+        entities[key].y = entities[key].y + tonumber(stuff[2])
+        entities[key].state = tonumber(stuff[3])
+    elseif entities[key].id == 2 then
+        stuff = getInfo("edit chaser info offset +x,+y,+delay")
+        entities[key].x = entities[key].x + tonumber(stuff[1])
+        entities[key].y = entities[key].y + tonumber(stuff[2])
+        entities[key].delay = entities[key].delay + tonumber(stuff[3])
+    elseif entities[key].id == 3 then
+        stuff = getInfo("edit door info offset +x, +y, +doorx, +doory, +height")
+        entities[key].x = entities[key].x + tonumber(stuff[1])
+        entities[key].y = entities[key].y + tonumber(stuff[2])
+        entities[key].dx = entities[key].dx + tonumber(stuff[3])
+        entities[key].dy = entities[key].dy + tonumber(stuff[4])
+        entities[key].len = entities[key].len + tonumber(stuff[5])
+    elseif entities[key].id == 4 then
+        stuff = getInfo("edit wind info offset +x, +y, +w, +h, =vx, =vy, zeros change nothing")
+        entities[key].x = entities[key].x + tonumber(stuff[1])
+        entities[key].y = entities[key].y + tonumber(stuff[2])
+        entities[key].w = entities[key].w + tonumber(stuff[3])
+        entities[key].h = entities[key].h + tonumber(stuff[4])
+        entities[key].vx = tonumber(stuff[5])
+        entities[key].vy = tonumber(stuff[6])
+    elseif entities[key].id == 5 then
+        -- no entity 5 yet
+    end
+end
+
+function getEntity(x,y)
+    for key, thing in pairs(entities) do
+        if thing.x == x and thing.y == y then
+            print("thing found! id: " .. thing.id)
+            return key
+        end
+    end
+end
+
+function placeEntity(thing)
+    if thing == 1 then
+        table.insert(entities, {id = 1, x = gameX, y = gameY, state = -2})
+    elseif thing == 2 then
+        table.insert(entities, {id = 1, x = gameX, y = gameY, state = -1})
+    elseif thing == 3 then
+        local d = getInfo("enter delay into info.txt, reccomended between 50-200:")
+        table.insert(entities, {id = 2, x = gameX, y = gameY, delay = tonumber(d[1])})
+    elseif thing == 4 then
+        local vxy = getInfo("enter door door height (remember 10 = one tile) enter door location (x,y)")
+        table.insert(entities, {id = 3, x = gameX, y = gameY, dx = tonumber(vxy[2]), dy = tonumber(vxy[3]), hor = -2, len = tonumber(vxy[1])})
+    elseif thing == 5 then
+        local vxy = getInfo("enter door door width (remember 10 = one tile) enter door location (x,y)")
+        table.insert(entities, {id = 3, x = gameX, y = gameY, dx = tonumber(vxy[2]), dy = tonumber(vxy[3]), hor = -2, len = tonumber(vxy[1])})
+    elseif thing == 6 then
+        local whv = getInfo("enter wind width, height, and vx, vy (keep v at 1 and below)")
+        table.insert(entities, {id = 4, x = gameX, y = gameY, w = tonumber(whv[1]), h = tonumber(whv[2]), vx = tonumber(whv[3]), vy = tonumber(whv[4])})
+    end
+end
+
 function love.keypressed(key, scancode, isrepeat)
-    if key == "p" then
-        currentBrush = -1 -- place a player
-    elseif key == "h" then
-        -- show a list of all keys in the future
-    elseif key == "b" then
-        currentBrush = 1 -- place a block
-    elseif key == "g" then
-        currentBrush = -2 --place the goal (negative numbers should only be able to be placed once)
-    elseif key == "s" then
-        save()
-        print("saved to " .. saveName .. ".txt")
-    elseif key == "l" then
-        if timer < 20 then 
-            clearLevel()
-            loadLevel(saveName .. ".txt")
+    if not entityMode then
+        if key == "p" then
+            currentBrush = -1 -- place a player
+        elseif key == "h" then
+            -- show a list of all keys in the future
+        elseif key == "b" then
+            currentBrush = 1 -- place a block
+        elseif key == "g" then
+            currentBrush = -2 --place the goal (negative numbers should only be able to be placed once)
+        elseif key == "s" then
+            save()
+            print("saved to " .. saveName .. ".txt")
+        elseif key == "l" then
+            if timer < 20 then 
+                clearLevel()
+                loadLevel(saveName .. ".txt")
+            end
+            timer = 0 
+        elseif key == "r" then
+            rotate()
+        elseif key == "v" then
+            currentBrush = 5 -- place spikes "vvv"
+        elseif key == "c" then
+            print(timer)
+            if timer < 20 then 
+                clearLevel()
+            end
+            timer = 0 
+        elseif key == "e" then
+            entityMode = true
+            currentBrush = 1
         end
-        timer = 0 
-    elseif key == "r" then
-        rotate()
-    elseif key == "v" then
-        currentBrush = 5 -- place spikes "vvv"
-    elseif key == "backspace" then
-        print(timer)
-        if timer < 20 then 
-            clearLevel()
+    else
+        if key == "m" then --mines
+            if currentBrush == 1 then
+                currentBrush = 2
+            elseif currentBrush == 2 then 
+                currentBrush = 1
+            else
+                currentBrush = 1
+            end
+        elseif key == "h" then
+            -- show a list of all keys in the future
+        elseif key == "w" then -- wind 
+            currentBrush = 6
+        elseif key == "d" then --door
+            if currentBrush == 4 then
+                currentBrush = 5
+            elseif currentBrush == 5 then 
+                currentBrush = 4
+            else
+                currentBrush = 4
+            end
+        elseif key == "p" then --evil player
+            currentBrush = 3
+        elseif key == "b" then --dust bunny
+        elseif key == "s" then
+            save()
+            print("saved to " .. saveName .. ".txt")
+        elseif key == "l" then
+            if timer < 20 then 
+                clearLevel()
+                loadLevel(saveName .. ".txt")
+            end
+            timer = 0 
+        elseif key == "c" then
+            print(timer)
+            if timer < 20 then 
+                clearLevel()
+            end
+            timer = 0 
+        elseif key == "e" then
+            entityMode = false
+            currentBrush = 1
         end
-        timer = 0 
     end
 end
 
@@ -166,20 +329,36 @@ function drawEntities()
     end
 end
 
-function drawCursor(mouseX, mouseY)
-    if love.mouse.isDown(2) then
-        love.graphics.setColor(1,1,1)
-    end
-    if currentBrush >0 and currentBrush <= 4 then
-    love.graphics.rectangle("fill", mouseX, mouseY, 20, 20)
-    elseif currentBrush == -1 then
+function drawCursor(mouseX, mouseY, currentBrush)
+    if not entityMode then
+        if love.mouse.isDown(2) then
+            love.graphics.setColor(1,1,1)
+        end
+        if currentBrush >0 and currentBrush <= 4 then
         love.graphics.rectangle("fill", mouseX, mouseY, 20, 20)
-        love.graphics.setColor(.8,.8,.8)
-        love.graphics.rectangle("fill", mouseX+5, mouseY+5, 10, 10)
-    elseif currentBrush == -2 then 
-        drawGoal(mouseX, mouseY)
-    elseif currentBrush > 4 and currentBrush <=8 then
-        drawSpike(currentBrush, mouseX,mouseY)
+        elseif currentBrush == -1 then
+            love.graphics.rectangle("fill", mouseX, mouseY, 20, 20)
+            love.graphics.setColor(.8,.8,.8)
+            love.graphics.rectangle("fill", mouseX+5, mouseY+5, 10, 10)
+        elseif currentBrush == -2 then 
+            drawGoal(mouseX, mouseY)
+        elseif currentBrush > 4 and currentBrush <=8 then
+            drawSpike(currentBrush, mouseX,mouseY)
+        end
+    else
+        if currentBrush == 1 then --mine (on)
+            drawMine(gameX, gameY, -2)
+        elseif currentBrush == 2 then --mine (off)
+            drawMine(gameX, gameY, -1)
+        elseif currentBrush == 3 then -- chaser
+            drawChaser(gameX, gameY)
+        elseif currentBrush == 4 then -- door vertical
+            drawDoor(gameX, gameY,gameX, gameY, -2, 30)
+        elseif currentBrush == 5 then
+            drawDoor(gameX, gameY, gameX, gameY, -1, 30)
+        elseif currentBrush == 6 then -- wind
+            drawWind(gameX, gameY, 50, 50, 0,0)
+        end
     end
     
 end
@@ -240,6 +419,7 @@ function drawWind(x,y,w,h,vx,vy)
     local cx, cy = x*2+w,y*2+h
     love.graphics.line(cx,cy,cx+vx*100, cy+vy*100)
     love.graphics.circle("fill", cx+vx*100, cy+vy*100,5)
+    love.graphics.circle("line", x*2, y*2, 5)
 end
 
 function drawGoal(x,y)
@@ -363,6 +543,7 @@ function clearLevel()
         end
     end
     blockGrid = emptyGrid
+    entities = {}
 end
 
 function drawSpike(rotation, x, y)
@@ -378,13 +559,7 @@ function drawSpike(rotation, x, y)
 end
 
 --stuff needed:
---LEVEL READER
---LEVEL SAVER
---LEVEL CLEAR
---erase is already in there i think
---goal placement
---all the spikes
---rotate function
+
 
 
 -- tile types:

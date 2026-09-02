@@ -351,11 +351,12 @@ local levelRead = function(levelPath)
 		local itemType = tonumber(levelInfo:readline())
 		if itemType == nil then break end
 		print("entity ", itemType)
-		while info1 ~=0 and info2 ~=0 and info3 ~=0 do
+		while true do
 			info1 = tonumber(levelInfo:readline())
 			info2 = tonumber(levelInfo:readline())
 			info3 = tonumber(levelInfo:readline())
 			if (info1 == 0 and info2 == 0 and info3 == 0) or info1 == nil then
+				print("corrupt level")
 				break
 			end
 			if itemType == 1 then
