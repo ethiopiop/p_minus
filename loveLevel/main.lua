@@ -1,5 +1,6 @@
 love.window.setMode(800,480)
 local justpress = true
+local gfx = love.graphics
 
 function love.load()
     local emptyGrid = {}
@@ -247,6 +248,8 @@ function save() -- write to level location
     end
     if saveable then
     saveObject(1);
+    saveObject(2)
+    saveObject(3)
     saveObject(5);
     saveObject(6);
     saveObject(7);
@@ -334,8 +337,12 @@ function drawCursor(mouseX, mouseY, currentBrush)
         if love.mouse.isDown(2) then
             love.graphics.setColor(1,1,1)
         end
-        if currentBrush >0 and currentBrush <= 4 then
-        love.graphics.rectangle("fill", mouseX, mouseY, 20, 20)
+        if currentBrush == 1 or currentBrush == 4 then
+            love.graphics.rectangle("fill", mouseX, mouseY, 20, 20)
+        elseif currentBrush == 2 then
+            drawDashThrough(mouseX,mouseY)
+        elseif currentBrush ==3 then 
+            drawWalkThrough(mouseX, mouseY)
         elseif currentBrush == -1 then
             love.graphics.rectangle("fill", mouseX, mouseY, 20, 20)
             love.graphics.setColor(.8,.8,.8)
@@ -375,6 +382,10 @@ function drawLevel()
                 love.graphics.setColor(0,0,0)
             elseif blockGrid[i][j] == -2 then
                 drawGoal((i-2)*20, (j-2)*20)
+            elseif blockGrid[i][j] == 2 then
+                drawDashThrough((i-2)*20, (j-2)*20)
+            elseif blockGrid[i][j] == 3 then
+                drawWalkThrough((i-2)*20, (j-2)*20)
             elseif blockGrid[i][j] <=8 and blockGrid[i][j] >= 5 then
                 drawSpike(blockGrid[i][j], (i-2)*20, (j-2)*20)
             end  
@@ -556,6 +567,16 @@ function drawSpike(rotation, x, y)
     elseif rotation == 8 then --L
         love.graphics.polygon("line", x+20,y, x+14,y+5, x+20,y+10, x+14,y+15, x+20,y+20)
     end
+end
+
+function drawDashThrough(x,y)
+    gfx.setColor(.5,.5,.5)
+    gfx.rectangle("fill", x,y,20,20)
+    gfx.setColor(0,0,0)
+end
+
+function drawWalkThrough(x,y)
+    gfx.rectangle("line",x,y,20,20)
 end
 
 --stuff needed:

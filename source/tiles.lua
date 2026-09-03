@@ -32,7 +32,9 @@ end
 function Tile:isColliding(tileLocation, playerX, playerY)
 	local yDiff = -10
 	local xDiff = -10
-	if tileLocation == "A" then
+	if tileLocation == "S" then
+			return true, 0, 0, self.tileType
+	elseif tileLocation == "A" then
 		yDiff = self.y + 15 - playerY
 		xDiff = self.x + 15 - playerX + 0.15
 		if xDiff > 0 and yDiff > 0 then
@@ -401,6 +403,31 @@ function SpikeL:isColliding(tileLocation, playerX, playerY)
 	return false, xDiff, yDiff, self.tileType
 end
 
+class("DashThrough").extends(Tile)
+
+function DashThrough:init(x,y)
+	DashThrough.super.init(self, x,y)
+	self.tileType = 2
+	self.solid = false
+end
+
+function DashThrough:draw()
+	local im = gfx.image.new("images/dashThrough.png")
+	im:draw(self.x, self.y)
+end
+
+class("WalkThrough").extends(Tile)
+
+function WalkThrough:init(x,y)
+	DashThrough.super.init(self, x,y)
+	self.tileType = 3
+	self.solid = false
+end
+
+function WalkThrough:draw()
+	local im = gfx.image.new("images/walkThrough.png")
+	im:draw(self.x, self.y)
+end
 
 -- simple tile ideas (stuff that shouldnt need custom collision code):
 -- trampolines (give bigger jump/much bigger bounce, bounce you a bit for just landing on them)

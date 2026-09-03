@@ -330,7 +330,9 @@ local levelRead = function(levelPath)
 			if itemType == 1 then
 				grid[infoX][infoY] = Tile(infoX, infoY)
 			elseif itemType == 2 then
+				grid[infoX][infoY] = DashThrough(infoX, infoY)
 			elseif itemType == 3 then
+				grid[infoX][infoY] = WalkThrough(infoX, infoY)
 			elseif itemType == 4 then
 			elseif itemType == 5 then
 				grid[infoX][infoY] = SpikeU(infoX, infoY)

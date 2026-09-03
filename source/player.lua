@@ -65,7 +65,7 @@ function Player:init(x, y, env)
 end
 
 function Player:getPos()
-	return self.position.dx, self.position.dy, 5
+	return math.floor(self.position.dx), math.floor(self.position.dy), 5
 end
 
 function Player:setDir(dir)
@@ -422,6 +422,16 @@ function Player:handleCollision(abc, X, Y, xDiff, yDiff, tile)
 	elseif tile > 4 and tile <= 8 then
 		self:deathHandler()
 		--print("killed by: ", abc)
+	elseif tile == 2 then
+		if self.dashing == 0 and abc == "S" then
+			self:deathHandler()
+			print("killed by not dashing through!")
+		end
+	elseif tile == 3 and abc == "S" then
+		if self.dashing > 0 then 
+			self:deathHandler()
+			print("killed by dashing through!")
+		end
 	end
 end
 
@@ -434,7 +444,7 @@ function Player:checkCollisions()
 	end
 	local gridX = math.floor(self.position.dx / 10 + 1)
 	local gridY = math.floor(self.position.dy / 10 + 1)
-	print(gridX, gridY)
+	--print(gridX, gridY)
 	if gridX >= 41 or gridX <=0 then self:kill() print("killed by OOB X")end -- kill you before OOB error
 	if gridY >= 25 or gridY <=0 then self:kill() print("killed by OOB Y")end
 	self:checkCloseCollisions(gridX, gridY, self.position.dx, self.position.dy)
@@ -544,20 +554,23 @@ function Player:checkCloseCollisions(X, Y, x, y)
 				--print("colliding G!!!!!!")
 				self:handleCollision("G", X, Y, xDiff, yDiff, tile)
 				hitGround = true
+				--print("grounded G")
 			end
 		else
-			if self.environment[X - 1][Y + 1]:getTileType() ~= 0 then
+			if self.environment[X - 1][Y + 1]:isSolid() then
 				local collide, xDiff, yDiff, tile = self.environment[X - 1][Y + 1]:isColliding("F", x, y)
 				if collide then
 					self:handleCollision("F", X, Y, xDiff, yDiff, tile)
 					hitGround = true
+					--print("grounded F")
 				end
 			end
-			if self.environment[X + 1][Y + 1]:getTileType() ~= 0 then
+			if self.environment[X + 1][Y + 1]:isSolid() then
 				local collide, xDiff, yDiff, tile = self.environment[X + 1][Y + 1]:isColliding("H", x, y)
 				if collide then
 					self:handleCollision("H", X, Y, xDiff, yDiff, tile)
 					hitGround = true
+					--print("grounded H")
 				end
 			end
 			if not hitGround then

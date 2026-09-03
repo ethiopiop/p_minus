@@ -72,10 +72,12 @@ function Follower:init(x,y, delay)
 	self.pos = {}
 	self.size = 3
 	self.id = 2
-	self.wait = delay
+	self.wait = math.ceil(delay/3)
 	self.waiter = 0
 	self.active = false
 	self.waiting = true
+	self.im = gfx.image.new("images/chaser.png")
+	self.timer = math.random(3)
 end
 
 function Follower:update(player)
@@ -86,6 +88,7 @@ function Follower:update(player)
 			player:kill()
 		end
 	end
+	if self.timer%3 == 0 then
 	if self.active then
 		if self.waiter < self.wait then
 			table.insert(self.pos, vect(player:getPos()))
@@ -97,13 +100,18 @@ function Follower:update(player)
 			table.insert(self.pos, vect(player:getPos()))
 		end
 	end
+	end
+	self.timer = self.timer +1
 end
 
 function Follower:draw()
+	self.im:draw(self.x-6, self.y-6)
+	--[[
 	gfx.setLineWidth(2)
 	gfx.drawRect(self.x-5, self.y-5, 10,10)
 	gfx.setLineWidth(1)
 	gfx.fillCircleAtPoint(self.x, self.y, self.size)
+	]]
 end
 
 function Follower:reset()
@@ -124,6 +132,7 @@ function Door:init(x, y, doorx, doory, hor, length) --6 info!!
 	self.size = 5
 	self.doorX = doorx
 	self.doorY = doory
+	self.im = gfx.image.new("images/target.png")
 	if hor == -1 then self.horizantal = true else self.horizantal = false end
 	if self.horizantal then 
 		self.doorWidth = length
@@ -154,7 +163,7 @@ function Door:update(player)
 			self.closed = false
 		end
 		if self:hitDoor(pX, pY, pS) then
-				player:kill()
+			player:kill()
 		end
 	end
 end
@@ -165,14 +174,10 @@ function Door:draw()
 	if self.closed then
 		gfx.setLineWidth(2)
 		gfx.drawRect(self.doorX, self.doorY, self.doorWidth, self.doorHeight)
-		gfx.drawLine(x - 3, y -3, x + 3, y +3)
-		gfx.drawLine(x+ 3, y - 3, x-3,y +3)
 		gfx.setLineWidth(1)
+		self.im:draw(self.x-5,self.y-5)
 	else
-		gfx.setLineWidth(2)
-		gfx.drawLine(x - 2, y -3, x-2, y +3)
-		gfx.drawLine(x+ 2, y - 3,x + 2, y +3 )
-		gfx.setLineWidth(1)
+		gfx.fillCircleAtPoint(self.x,self.y,2)
 	end
 end
 
