@@ -193,8 +193,8 @@ function Wind:init(x,y,w,h, vx, vy)
 	self.y = y
 	self.w = w
 	self.h = h
-	self.imvx = vx
-	self.imvy = vy
+	self.imvx = vx*1.5
+	self.imvy = vy*2
 	self.vx = vx/3
 	self.vy = vy/3
 	self.pat = gfx.image.new("images/wind.png")
