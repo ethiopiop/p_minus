@@ -52,7 +52,7 @@ local selection
 local im = gfx.image.new("assets/05.png")
 local logo = gfx.image.new("assets/logo-01.png")
 local menuOptions = {
-	"TEST",
+	"TUTORIAL",
 	"EASY",
 	"MEDIUM",
 	"HARD",

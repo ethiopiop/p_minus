@@ -141,7 +141,7 @@ function placeEntity(thing)
         table.insert(entities, {id = 3, x = gameX, y = gameY, dx = tonumber(vxy[2]), dy = tonumber(vxy[3]), hor = -2, len = tonumber(vxy[1])})
     elseif thing == 5 then
         local vxy = getInfo("enter door door width (remember 10 = one tile) enter door location (x,y)")
-        table.insert(entities, {id = 3, x = gameX, y = gameY, dx = tonumber(vxy[2]), dy = tonumber(vxy[3]), hor = -2, len = tonumber(vxy[1])})
+        table.insert(entities, {id = 3, x = gameX, y = gameY, dx = tonumber(vxy[2]), dy = tonumber(vxy[3]), hor = -1, len = tonumber(vxy[1])})
     elseif thing == 6 then
         local whv = getInfo("enter wind width, height, and vx, vy (keep v at 1 and below)")
         table.insert(entities, {id = 4, x = gameX, y = gameY, w = tonumber(whv[1]), h = tonumber(whv[2]), vx = tonumber(whv[3]), vy = tonumber(whv[4])})
