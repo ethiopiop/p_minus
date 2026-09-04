@@ -1,0 +1,106 @@
+-- Decompiled with the pd-emu decompilation tools
+
+-- Embedded PNG data
+datalen=1100
+data=iVBORw0KGgoAAAANSUhEUgAAAIAAAAAwBAMAAAAr2m+NAAAAD1BMVEUxLyixr6gxLyixr6gAAAAx7vLPAAAABHRSTlMAAP//DbV0ZQAAAtRJREFUeJztVUuu2zAMHCrZFqEvUCi6/5kM4e1dKc3aYjGUHDt5aXuBEBAo6zviDGkBgNQyEjCHiPZ1xRqA9hXRQssIcUbCjBB90YwnCz/PdKKAXARRb4iK9a5Fw4SF43HiHP3SO092/eEHbCai6x2lnarUE0ofM8AEEChRxsx7Ixo9gi6PAwwVZrc1lGm9E0V9vovzolA+FxMW91eDH2BcXAcCRQ3GQW2/D4dIUVi91JMCBMfnBS0IWwxyA8xqNTNIFdgkvt3h8xm8wZEcImDIDwT+qIHEUFoo6CEvAyGAOdUcfgJtBhLX1dYRbMYzckN2fxjzzfPWO67PCCGlOIeElBIikGOAe85zDEiRAkiRepnRQkTih6+LOMcJS5ALRK23i+DBf/fLlToZLYhCdIVcYqYPYlWhgBXx1iNVIFbo4PNdEm5RRzDFl6HHgGO8cSIlbNsHF2rlHAPJ5oyUilwVeap7ELcbt8bVjBsROJLxBKd10o6ECIw3qI9CJuubHIk+EGzxdw3UPk4kRHb29x1vxo7EJ0rXyKbWHCustP5NBPkbu69cP/fby4yEOOpAb3PaasHBB8eQRp/1YZ8/x8k2rpfBPb1nZKC/3PSuqwfF+xdf4+OsGUGKdK6tKpkYng+t7kcqD9vz05Os6rnzTmnpcnpMTuudDfR+PWGzIv3a6ejjoYfcVdL56Up0BD01+6XOqt08N/ZDqIOpKw6i1VyB7v0wG1pgOXO9AOoqGq/hmLAab1ENT/092mThsOa55a0O/KNtrOeWv83Je97ft3eiO5PT8Q948N/5vukdGNxTC/Cov1pglA86qFa3CrhROpKqS+LNATKCyijLpPOz/MmW/xAgl7cnhH40E515v6/paa7UmRLVX/bDCwqLhIOYer3yzdX67SwsRPXg/yWIVmekghYqKv8FrryDt9oPsXLI5COC/MIx7YnrQd7/6sbHPvaxj/0B+6Hme+aJFLkAAAAASUVORK5CYII=
+width=8
+height=8
+
+tracking=0
+
+-- Glyphs
+space		4
+!		3
+"		6
+#		7
+$		7
+%		7
+&		7
+'		3
+(		4
+)		4
+*		5
++		7
+,		3
+-		8
+.		3
+/		7
+0		7
+1		6
+2		6
+3		6
+4		6
+5		6
+6		6
+7		6
+8		7
+9		6
+:		3
+;		3
+<		5
+=		5
+>		5
+?		5
+@		6
+A		7
+B		7
+C		6
+D		7
+E		7
+F		7
+G		7
+H		7
+I		5
+J		7
+K		7
+L		7
+M		7
+N		7
+O		7
+P		7
+Q		7
+R		7
+S		7
+T		7
+U		7
+V		7
+W		7
+X		7
+Y		7
+Z		7
+[		8
+\		8
+]		8
+^		8
+_		8
+`		8
+a		8
+b		8
+c		8
+d		8
+e		8
+f		8
+g		8
+h		8
+i		8
+j		8
+k		8
+l		8
+m		8
+n		8
+o		8
+p		8
+q		8
+r		8
+s		8
+t		8
+u		8
+v		8
+w		8
+x		8
+y		8
+z		8
+{		8
+|		8
+}		8
+~		8

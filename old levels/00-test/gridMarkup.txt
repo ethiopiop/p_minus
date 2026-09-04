@@ -1,6 +1,8 @@
 LEVEL NAME ## (idk if i can actually implement comments lmao, but this is just an example)
 1  ## first two numbers are ALWAYS player starting position X and Y (this will have to go into a different array)
 24
+12
+12 ## next two numbers are level goal
 1 ## next number is entity type to be placed (for now 1 is the only valid number, maybe level end trigger will have its own number)
 2 ## after that is pairs of coordinates 
 2 ## (for some reason the only read functions are either a whole line to string or just one bit read, which idk how to use the bit reading)
@@ -26,11 +28,17 @@ LEVEL NAME ## (idk if i can actually implement comments lmao, but this is just a
 20
 0  ## ill use zero terminated strings (haha human resources reference) because the way things are set up the array starts at 1,1 not 0,0
 0  ## so there is no reason for 0 to be used in, also it will have to be double zeros since the function will be taking two lines at a time
+0  ## tiletype of zero means its time to start making entities, same deal as before it will just be entity types and coordinates
+1  ## entities have their own numbers
+100## this time they dont have to be on grid coordinates anymore though (or maybe just finer grid coordinates?)
+120## some entities may need more info than just coordinates
+35 ## ill also have to do testing to see how many entities can even be on screen at once 
+325##(they will all have to be looped over to redraw and collision)
+0
+0
+0 ## default amount of data per entity is 3, so three zeros needed (specific entities will have more numbers per entity, watch out for bugs from that)
+   ## that means there should be at least FIVE ZEROS at the end of each level to avoid an infinite loop (thats so many ahsjkdfhjlkasdf)
 
-##/
-for now im not sure how ill handle having two things on the same tile
-but like
-thats not an issue for tiles so i wont have to worry about it until i start making entities lol
 
 tile = thing locked to the grid (static) ex: blocks/spikes/platforms 
 entity = thing not locked to the grid (can change position/ be removed) ex: anything with an animation, anything that moves, coins
