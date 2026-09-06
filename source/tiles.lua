@@ -212,19 +212,19 @@ function SpikeR:isColliding(tileLocation, playerX, playerY)
 	elseif tileLocation == "A" then
 		yDiff = self.y + 15 - playerY
 		xDiff = self.x + 15 - playerX + 0.15
-		if xDiff > 6 and yDiff > 0.5 then
+		if xDiff > 6 and yDiff > 1 then
 			return true, xDiff, yDiff, self.tileType
 		end
 	elseif tileLocation == "B" then
 		yDiff = self.y + 15 - playerY
 		xDiff = self.x + 10 - playerX
-		if yDiff >= 0.5 and xDiff >= 2 then
+		if yDiff >= 1 and xDiff >= 2 then
 			return true, xDiff, yDiff, self.tileType
 		end
 	elseif tileLocation == "C" then
 		yDiff = self.y + 15 - playerY
 		xDiff = playerX - self.x + 5
-		if xDiff > 0 and yDiff > 0.5 then
+		if xDiff > 0 and yDiff > 1 then
 			return true, xDiff, yDiff, self.tileType
 		end
 	elseif tileLocation == "D" then
@@ -354,7 +354,7 @@ function SpikeL:isColliding(tileLocation, playerX, playerY)
 	elseif tileLocation == "A" then
 		yDiff = self.y + 15 - playerY
 		xDiff = self.x + 15 - playerX + 0.15
-		if xDiff >= 0 and yDiff > 0.5 then
+		if xDiff >= 0 and yDiff > 1 then
 			--print("hit spike A")
 			return true, xDiff, yDiff, self.tileType
 		end
@@ -362,14 +362,14 @@ function SpikeL:isColliding(tileLocation, playerX, playerY)
 		yDiff = self.y + 15 - playerY
 		xDiff = self.x + 10 - playerX
 		--print("B", xDiff, yDiff)
-		if yDiff >= 0.5 and xDiff <= 7.2 then
+		if yDiff >= 1 and xDiff <= 7.2 then
 			return true, xDiff, yDiff, self.tileType
 		end
 	elseif tileLocation == "C" then
 		yDiff = self.y + 15 - playerY
 		xDiff = playerX - self.x + 5
 		--print("C", xDiff, yDiff)
-		if xDiff > 7 and yDiff > 0.5 then
+		if xDiff > 7 and yDiff > 1 then
 			print("hit spike C")
 			return true, xDiff, yDiff, self.tileType
 		end
