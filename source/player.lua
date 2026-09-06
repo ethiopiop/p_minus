@@ -128,10 +128,10 @@ function Player:deathHandler()
 		self.dead = true
 		STATE = "dead"
 	elseif not self.firstLoad then
-		if pd.buttonJustPressed("a") then
+		if pd.buttonJustPressed("a") or pd.buttonJustPressed("b") then
 			self:respawn()
 			STATE = "level"
-		elseif pd.buttonJustPressed("b") then
+		elseif pd.buttonJustPressed("down") then
 			STATE = "levelEXIT"
 		end
 	elseif pd.getButtonState() == 0 then
@@ -238,6 +238,7 @@ function Player:checkInputs()
 			--print("jump", self.bufferTimer, self.cyoteTimer)
 		elseif math.abs(self.dashType) == 1 then
 			self:dashJump()
+			--print("dashjump", self.dashJumpBufferTimer, self.walled)
 		else
 			self:stompJump()
 		end
@@ -249,8 +250,10 @@ function Player:checkInputs()
 	if not (not pd.buttonJustPressed("a") or self.walled == 0 or self.grounded) or self.bufferTimer < 4 and self.walled ~= 0 and not self.grounded then
 		if self.dashJumpBufferTimer > 0 then
 			self:wallJumpStart(self.walled)
+			--print("walljump", self.dashJumpBufferTimer, self.dashing)
 		else
 			self:dashBounce()
+			--print("dashbounce", self.dashJumpBufferTimer, self.walled)
 		end
 		self.bufferTimer = 20
 	end
@@ -306,7 +309,9 @@ function Player:dashBounce()
 	self.velocity.dy = self.velocity.dy - self.wallJumpYReset
 	self.grounded = false
 	self.dashing = 0
+	--self.walled = 0
 	self.dir = not self.dir
+	--print("dashbounce!", self.dashType, self.walled)
 end
 
 function Player:dashJump()
@@ -398,6 +403,7 @@ function Player:wallFriction()
 end
 
 function Player:handleCollision(abc, X, Y, xDiff, yDiff, tile)
+	print(abc, tile)
 	if tile == 1 then
 		if abc == "A" then
 			self:handleCollisionA(X, Y, xDiff, yDiff)
@@ -421,7 +427,7 @@ function Player:handleCollision(abc, X, Y, xDiff, yDiff, tile)
 		STATE = "levelFINISH"
 	elseif tile > 4 and tile <= 8 then
 		self:deathHandler()
-		--print("killed by: ", abc)
+		print("killed by: ", abc)
 	elseif tile == 2 then
 		if self.dashing == 0 and abc == "S" then
 			self:deathHandler()
@@ -445,9 +451,8 @@ function Player:checkCollisions()
 	local gridX = math.floor(self.position.dx / 10 + 1)
 	local gridY = math.floor(self.position.dy / 10 + 1)
 	--print(gridX, gridY)
-	if gridX >= 41 or gridX <=0 then self:kill() print("killed by OOB X")end -- kill you before OOB error
-	if gridY >= 25 or gridY <=0 then self:kill() print("killed by OOB Y")end
-	self:checkCloseCollisions(gridX, gridY, self.position.dx, self.position.dy)
+	if (gridX >= 41 or gridX <=0) or (gridY >= 25 or gridY <=0) then self:kill() print("killed by OOB Y")
+	else self:checkCloseCollisions(gridX, gridY, self.position.dx, self.position.dy) end
 end
 
 function Player:checkCloseCollisions(X, Y, x, y)
@@ -457,6 +462,18 @@ function Player:checkCloseCollisions(X, Y, x, y)
 			local collide, xDiff, yDiff, tile = self.environment[X - 1][Y]:isColliding("D", x, y)
 			if collide then
 				self:handleCollision("D", X, Y, xDiff, yDiff, tile)
+			end
+		end
+		if self.environment[X][Y-1]:getTileType() ~= 0 and self.environment[X][Y-1]:isSolid() == false then --check ABOVE for spikes
+			local collide, xDiff, yDiff, tile = self.environment[X][Y-1]:isColliding("B", x, y)
+			if collide then
+				self:handleCollision("B", X, Y, xDiff, yDiff, tile)
+			end
+		end
+		if self.environment[X][Y+1]:getTileType() ~= 0 and self.environment[X][Y+1]:isSolid() == false then --check BELOW for spikes
+			local collide, xDiff, yDiff, tile = self.environment[X][Y+1]:isColliding("G", x, y)
+			if collide then
+				self:handleCollision("G", X, Y, xDiff, yDiff, tile)
 			end
 		end
 		if self.environment[X + 1][Y]:getTileType() ~= 0 then
@@ -470,6 +487,16 @@ function Player:checkCloseCollisions(X, Y, x, y)
 				local collide, xDiff, yDiff, tile = self.environment[X + 1][Y + 1]:isColliding("H", x, y)
 				if collide then
 					self:handleCollision("H", X, Y, xDiff, yDiff, tile)
+					wallHit = true
+				elseif self.walled ~= 0 and self.dashing == 0 then
+					self.walled = 0
+				end
+			end
+			if self.environment[X - 1][Y + 1]:getTileType() ~= 0 then -- corners redundancy
+				local collide, xDiff, yDiff, tile = self.environment[X - 1][Y + 1]:isColliding("F", x, y)
+				if collide then
+					self:handleCollision("F", X, Y, xDiff, yDiff, tile)
+					wallHit = true
 				elseif self.walled ~= 0 and self.dashing == 0 then
 					self.walled = 0
 				end
@@ -478,6 +505,16 @@ function Player:checkCloseCollisions(X, Y, x, y)
 				local collide, xDiff, yDiff, tile = self.environment[X + 1][Y - 1]:isColliding("C", x, y)
 				if collide then
 					self:handleCollision("C", X, Y, xDiff, yDiff, tile)
+					wallHit = true
+				elseif self.walled ~= 0 and self.dashing == 0 then
+					self.walled = 0
+				end
+			end
+			if self.environment[X - 1][Y - 1]:getTileType() ~= 0 then --corners redundancy
+				local collide, xDiff, yDiff, tile = self.environment[X - 1][Y - 1]:isColliding("A", x, y)
+				if collide then
+					self:handleCollision("A", X, Y, xDiff, yDiff, tile)
+					wallHit = true
 				elseif self.walled ~= 0 and self.dashing == 0 then
 					self.walled = 0
 				end
@@ -492,6 +529,18 @@ function Player:checkCloseCollisions(X, Y, x, y)
 			local collide, xDiff, yDiff, tile = self.environment[X + 1][Y]:isColliding("E", x, y)
 			if collide then
 				self:handleCollision("E", X, Y, xDiff, yDiff, tile)
+			end
+		end
+		if self.environment[X][Y-1]:getTileType() ~= 0 and self.environment[X][Y-1]:isSolid() == false then --check ABOVE for spikes
+			local collide, xDiff, yDiff, tile = self.environment[X][Y-1]:isColliding("B", x, y)
+			if collide then
+				self:handleCollision("B", X, Y, xDiff, yDiff, tile)
+			end
+		end
+		if self.environment[X][Y+1]:getTileType() ~= 0 and self.environment[X][Y+1]:isSolid() == false then --check BELOW for spikes
+			local collide, xDiff, yDiff, tile = self.environment[X][Y+1]:isColliding("G", x, y)
+			if collide then
+				self:handleCollision("G", X, Y, xDiff, yDiff, tile)
 			end
 		end
 		if self.environment[X - 1][Y]:getTileType() ~= 0 then
@@ -510,10 +559,28 @@ function Player:checkCloseCollisions(X, Y, x, y)
 					self.walled = 0
 				end
 			end
+			if self.environment[X + 1][Y + 1]:getTileType() ~= 0 then --corners redundancy
+				local collide, xDiff, yDiff, tile = self.environment[X + 1][Y + 1]:isColliding("H", x, y)
+				if collide then
+					self:handleCollision("H", X, Y, xDiff, yDiff, tile)
+					wallHit = true
+				elseif self.walled ~= 0 and self.dashing == 0 then
+					self.walled = 0
+				end
+			end
 			if self.environment[X - 1][Y - 1]:getTileType() ~= 0 then
 				local collide, xDiff, yDiff, tile = self.environment[X - 1][Y - 1]:isColliding("A", x, y)
 				if collide then
 					self:handleCollision("A", X, Y, xDiff, yDiff, tile)
+					wallHit = true
+				elseif self.walled ~= 0 and self.dashing == 0 then
+					self.walled = 0
+				end
+			end
+			if self.environment[X + 1][Y - 1]:getTileType() ~= 0 then --corners redundancy
+				local collide, xDiff, yDiff, tile = self.environment[X + 1][Y - 1]:isColliding("C", x, y)
+				if collide then
+					self:handleCollision("C", X, Y, xDiff, yDiff, tile)
 					wallHit = true
 				elseif self.walled ~= 0 and self.dashing == 0 then
 					self.walled = 0
@@ -622,16 +689,16 @@ function Player:handleCollisionC(X, Y, xDiff, yDiff)
 	if xDiff <= yDiff and self.environment[X][Y - 1]:isSolid() == false and self.dir == true then
 		self.velocity.dx = 0
 		self.position.dx = X * 10 - self.size / 2
-		--print("Xcollide C", xDiff, yDiff)
+		print("Xcollide C", xDiff, yDiff)
 		self.walled = 2
 	elseif xDiff <= 3 and self.environment[X][Y - 1]:getTileType() == 0 then
 		self.position.dx = X * 10 - self.size / 2
 		self.walled = 2
-		--print("Corner Correct C")
+		print("Corner Correct C")
 	else
 		self.velocity.dy = self.velocity.dy - self.velocity.dy
 		self.position.dy = Y * 10 - self.size / 2
-		--print("Ycollide C")
+		print("Ycollide C")
 	end
 end
 

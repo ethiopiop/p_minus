@@ -410,7 +410,9 @@ end
 
 function pd.update()
 	if STATE == "menu" then
+		
 		menuMode()
+	
 	elseif STATE == "level" then
 		gfx.sprite.update()
 		pd.drawFPS(0, 0)
@@ -429,7 +431,7 @@ function pd.update()
 			if pd.getButtonState() == 0 then
 				firstLoad = false
 			end
-		elseif pd.getButtonState() ~= 0 then
+		elseif pd.buttonJustReleased('a') or pd.buttonJustReleased('b') then
 			gfx.clear(gfx.kColorWhite)
 			STATE = "menu"
 			firstLoad = true
@@ -453,7 +455,7 @@ function pd.update()
 		gfx.fillRect(125, 90, 150, 70)
 		gfx.drawText("YOU DIED!!!", 135, 100)
 		gfx.drawText("PRESS A TO RETRY", 135, 120)
-		gfx.drawText("PRESS B TO EXIT", 135, 140)
+		gfx.drawText("PRESS DOWN TO EXIT", 135, 140)
 	end
 	pd.timer:updateTimers()
 end
