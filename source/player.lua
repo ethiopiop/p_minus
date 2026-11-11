@@ -458,6 +458,50 @@ end
 function Player:checkCloseCollisions(X, Y, x, y)
 	if self.dir then
 		local wallHit = false
+		if self.environment[X + 1][Y]:isSolid() == true then
+			local collide, xDiff, yDiff, tile = self.environment[X + 1][Y]:isColliding("E", x, y)
+			if collide then
+				self:handleCollision("E", X, Y, xDiff, yDiff, tile)
+			end
+			wallHit = true
+		else
+			if self.environment[X + 1][Y + 1]:isSolid() == true then
+				local collide, xDiff, yDiff, tile = self.environment[X + 1][Y + 1]:isColliding("H", x, y)
+				if collide then
+					self:handleCollision("H", X, Y, xDiff, yDiff, tile)
+					wallHit = true
+				elseif self.walled ~= 0 and self.dashing == 0 then
+					self.walled = 0
+				end
+			end
+			if self.environment[X - 1][Y + 1]:isSolid() == true then -- corners redundancy
+				local collide, xDiff, yDiff, tile = self.environment[X - 1][Y + 1]:isColliding("F", x, y)
+				if collide then
+					self:handleCollision("F", X, Y, xDiff, yDiff, tile)
+					wallHit = true
+				elseif self.walled ~= 0 and self.dashing == 0 then
+					self.walled = 0
+				end
+			end
+			if self.environment[X + 1][Y - 1]:isSolid() == true then
+				local collide, xDiff, yDiff, tile = self.environment[X + 1][Y - 1]:isColliding("C", x, y)
+				if collide then
+					self:handleCollision("C", X, Y, xDiff, yDiff, tile)
+					wallHit = true
+				elseif self.walled ~= 0 and self.dashing == 0 then
+					self.walled = 0
+				end
+			end
+			if self.environment[X - 1][Y - 1]:isSolid() == true then --corners redundancy
+				local collide, xDiff, yDiff, tile = self.environment[X - 1][Y - 1]:isColliding("A", x, y)
+				if collide then
+					self:handleCollision("A", X, Y, xDiff, yDiff, tile)
+					wallHit = true
+				elseif self.walled ~= 0 and self.dashing == 0 then
+					self.walled = 0
+				end
+			end
+		end
 		if self.environment[X - 1][Y]:getTileType() ~= 0 and self.environment[X - 1][Y]:isSolid() == false then --check behind for spikes
 			local collide, xDiff, yDiff, tile = self.environment[X - 1][Y]:isColliding("D", x, y)
 			if collide then
@@ -476,23 +520,20 @@ function Player:checkCloseCollisions(X, Y, x, y)
 				self:handleCollision("G", X, Y, xDiff, yDiff, tile)
 			end
 		end
-		if self.environment[X + 1][Y]:getTileType() ~= 0 then
-			local collide, xDiff, yDiff, tile = self.environment[X + 1][Y]:isColliding("E", x, y)
+		if wallHit == false and self.walled ~= 0 then
+			self.walled = 0
+		end
+	else
+		local wallHit = false
+		
+		if self.environment[X - 1][Y]:isSolid() == true then
+			local collide, xDiff, yDiff, tile = self.environment[X - 1][Y]:isColliding("D", x, y)
 			if collide then
-				self:handleCollision("E", X, Y, xDiff, yDiff, tile)
+				self:handleCollision("D", X, Y, xDiff, yDiff, tile)
 			end
 			wallHit = true
 		else
-			if self.environment[X + 1][Y + 1]:getTileType() ~= 0 then
-				local collide, xDiff, yDiff, tile = self.environment[X + 1][Y + 1]:isColliding("H", x, y)
-				if collide then
-					self:handleCollision("H", X, Y, xDiff, yDiff, tile)
-					wallHit = true
-				elseif self.walled ~= 0 and self.dashing == 0 then
-					self.walled = 0
-				end
-			end
-			if self.environment[X - 1][Y + 1]:getTileType() ~= 0 then -- corners redundancy
+			if self.environment[X - 1][Y + 1]:isSolid() == true then
 				local collide, xDiff, yDiff, tile = self.environment[X - 1][Y + 1]:isColliding("F", x, y)
 				if collide then
 					self:handleCollision("F", X, Y, xDiff, yDiff, tile)
@@ -501,16 +542,16 @@ function Player:checkCloseCollisions(X, Y, x, y)
 					self.walled = 0
 				end
 			end
-			if self.environment[X + 1][Y - 1]:getTileType() ~= 0 then
-				local collide, xDiff, yDiff, tile = self.environment[X + 1][Y - 1]:isColliding("C", x, y)
+			if self.environment[X + 1][Y + 1]:isSolid() == true then --corners redundancy
+				local collide, xDiff, yDiff, tile = self.environment[X + 1][Y + 1]:isColliding("H", x, y)
 				if collide then
-					self:handleCollision("C", X, Y, xDiff, yDiff, tile)
+					self:handleCollision("H", X, Y, xDiff, yDiff, tile)
 					wallHit = true
 				elseif self.walled ~= 0 and self.dashing == 0 then
 					self.walled = 0
 				end
 			end
-			if self.environment[X - 1][Y - 1]:getTileType() ~= 0 then --corners redundancy
+			if self.environment[X - 1][Y - 1]:isSolid() == true then
 				local collide, xDiff, yDiff, tile = self.environment[X - 1][Y - 1]:isColliding("A", x, y)
 				if collide then
 					self:handleCollision("A", X, Y, xDiff, yDiff, tile)
@@ -519,12 +560,16 @@ function Player:checkCloseCollisions(X, Y, x, y)
 					self.walled = 0
 				end
 			end
+			if self.environment[X + 1][Y - 1]:isSolid() == true then --corners redundancy
+				local collide, xDiff, yDiff, tile = self.environment[X + 1][Y - 1]:isColliding("C", x, y)
+				if collide then
+					self:handleCollision("C", X, Y, xDiff, yDiff, tile)
+					wallHit = true
+				elseif self.walled ~= 0 and self.dashing == 0 then
+					self.walled = 0
+				end
+			end
 		end
-		if wallHit == false and self.walled ~= 0 then
-			self.walled = 0
-		end
-	else
-		local wallHit = false
 		if self.environment[X + 1][Y]:getTileType() ~= 0 and self.environment[X - 1][Y]:isSolid() == false then --check behind for spikes
 			local collide, xDiff, yDiff, tile = self.environment[X + 1][Y]:isColliding("E", x, y)
 			if collide then
@@ -543,69 +588,25 @@ function Player:checkCloseCollisions(X, Y, x, y)
 				self:handleCollision("G", X, Y, xDiff, yDiff, tile)
 			end
 		end
-		if self.environment[X - 1][Y]:getTileType() ~= 0 then
-			local collide, xDiff, yDiff, tile = self.environment[X - 1][Y]:isColliding("D", x, y)
-			if collide then
-				self:handleCollision("D", X, Y, xDiff, yDiff, tile)
-			end
-			wallHit = true
-		else
-			if self.environment[X - 1][Y + 1]:getTileType() ~= 0 then
-				local collide, xDiff, yDiff, tile = self.environment[X - 1][Y + 1]:isColliding("F", x, y)
-				if collide then
-					self:handleCollision("F", X, Y, xDiff, yDiff, tile)
-					wallHit = true
-				elseif self.walled ~= 0 and self.dashing == 0 then
-					self.walled = 0
-				end
-			end
-			if self.environment[X + 1][Y + 1]:getTileType() ~= 0 then --corners redundancy
-				local collide, xDiff, yDiff, tile = self.environment[X + 1][Y + 1]:isColliding("H", x, y)
-				if collide then
-					self:handleCollision("H", X, Y, xDiff, yDiff, tile)
-					wallHit = true
-				elseif self.walled ~= 0 and self.dashing == 0 then
-					self.walled = 0
-				end
-			end
-			if self.environment[X - 1][Y - 1]:getTileType() ~= 0 then
-				local collide, xDiff, yDiff, tile = self.environment[X - 1][Y - 1]:isColliding("A", x, y)
-				if collide then
-					self:handleCollision("A", X, Y, xDiff, yDiff, tile)
-					wallHit = true
-				elseif self.walled ~= 0 and self.dashing == 0 then
-					self.walled = 0
-				end
-			end
-			if self.environment[X + 1][Y - 1]:getTileType() ~= 0 then --corners redundancy
-				local collide, xDiff, yDiff, tile = self.environment[X + 1][Y - 1]:isColliding("C", x, y)
-				if collide then
-					self:handleCollision("C", X, Y, xDiff, yDiff, tile)
-					wallHit = true
-				elseif self.walled ~= 0 and self.dashing == 0 then
-					self.walled = 0
-				end
-			end
-		end
 		if wallHit == false and self.walled ~= 0 then
 			self.walled = 0
 		end
 	end
 	if self.velocity.dy < 0 then
-		if self.environment[X][Y - 1]:getTileType() ~= 0 then
+		if self.environment[X][Y - 1]:isSolid() == true then
 			local collide, xDiff, yDiff, tile = self.environment[X][Y - 1]:isColliding("B", x, y)
 			if collide then
 				self:handleCollision("B", X, Y, xDiff, yDiff, tile)
 			end
 		else
-			if self.environment[X - 1][Y - 1]:getTileType() ~= 0 then
+			if self.environment[X - 1][Y - 1]:isSolid() == true then
 				local collide, xDiff, yDiff, tile = self.environment[X - 1][Y - 1]:isColliding("A", x, y)
 				if collide then
 					--print("collide A")
 					self:handleCollision("A", X, Y, xDiff, yDiff, tile)
 				end
 			end
-			if self.environment[X + 1][Y - 1]:getTileType() ~= 0 then
+			if self.environment[X + 1][Y - 1]:isSolid() == true then
 				local collide, xDiff, yDiff, tile = self.environment[X + 1][Y - 1]:isColliding("C", x, y)
 				if collide then
 					self:handleCollision("C", X, Y, xDiff, yDiff, tile)
